@@ -17,7 +17,7 @@ export async function addFavorite(node: LeetCodeNode): Promise<void> {
             customCodeLensProvider.refresh();
         }
     } catch (error) {
-        await promptForOpenOutputChannel("Failed to add the problem to favorite. Please open the output channel for details.", DialogType.error);
+        await promptForOpenOutputChannel("收藏题目失败，请打开输出面板查看详情。", DialogType.error);
     }
 }
 
@@ -29,6 +29,6 @@ export async function removeFavorite(node: LeetCodeNode): Promise<void> {
             customCodeLensProvider.refresh();
         }
     } catch (error) {
-        await promptForOpenOutputChannel("Failed to remove the problem from favorite. Please open the output channel for details.", DialogType.error);
+        await promptForOpenOutputChannel("取消收藏失败，请打开输出面板查看详情。", DialogType.error);
     }
 }

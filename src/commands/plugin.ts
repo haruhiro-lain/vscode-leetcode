@@ -1,6 +1,7 @@
 // Copyright (c) jdneo. All rights reserved.
 // Licensed under the MIT license.
 
+import { localizeLabel } from "../utils/labelUtils";
 import * as vscode from "vscode";
 import { leetCodeTreeDataProvider } from "../explorer/LeetCodeTreeDataProvider";
 import { leetCodeExecutor } from "../leetCodeExecutor";
@@ -16,7 +17,7 @@ export async function switchEndpoint(): Promise<void> {
         {
             label: `${isCnEnabled ? "" : "$(check) "}LeetCode`,
             description: "leetcode.com",
-            detail: `Enable LeetCode US`,
+            detail: `使用 LeetCode 国际站`,
             value: Endpoint.LeetCode,
         },
         {
@@ -35,9 +36,9 @@ export async function switchEndpoint(): Promise<void> {
         const endpoint: string = choice.value;
         await leetCodeExecutor.switchEndpoint(endpoint);
         await leetCodeConfig.update("endpoint", endpoint, true /* UserSetting */);
-        vscode.window.showInformationMessage(`Switched the endpoint to ${endpoint}`);
+        vscode.window.showInformationMessage(`已切换站点：${endpoint}`);
     } catch (error) {
-        await promptForOpenOutputChannel("Failed to switch endpoint. Please open the output channel for details.", DialogType.error);
+        await promptForOpenOutputChannel("切换站点失败，请打开输出面板查看详情。", DialogType.error);
     }
 
     try {
@@ -45,7 +46,7 @@ export async function switchEndpoint(): Promise<void> {
         await deleteCache();
         await promptForSignIn();
     } catch (error) {
-        await promptForOpenOutputChannel("Failed to sign in. Please open the output channel for details.", DialogType.error);
+        await promptForOpenOutputChannel("登录失败，请打开输出面板查看详情。", DialogType.error);
     }
 }
 
@@ -66,7 +67,7 @@ export async function switchSortingStrategy(): Promise<void> {
     picks.push(
         ...SORT_ORDER.map((s: SortingStrategy) => {
             return {
-                label: `${currentStrategy === s ? "$(check)" : "    "} ${s}`,
+                label: `${currentStrategy === s ? "$(check)" : "    "} ${localizeLabel(s)}`,
                 value: s,
             };
         }),

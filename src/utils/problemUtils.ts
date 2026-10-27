@@ -9,7 +9,7 @@ import { IProblem, langExt } from "../shared";
 export function genFileExt(language: string): string {
     const ext: string | undefined = langExt.get(language);
     if (!ext) {
-        throw new Error(`The language "${language}" is not supported.`);
+        throw new Error(`不支持编程语言 ${language}。`);
     }
     return ext;
 }

@@ -68,8 +68,8 @@ export abstract class LeetCodeWebview implements Disposable {
     private async showMarkdownConfigHint(): Promise<void> {
         await promptHintMessage(
             "hint.configWebviewMarkdown",
-            'You can change the webview appearance ("fontSize", "lineWidth" & "fontFamily") in "markdown.preview" configuration.',
-            "Open settings",
+            '可通过 markdown.preview 设置结果页的字号、行宽和字体。',
+            "打开设置",
             (): Promise<any> => openSettingsEditor("markdown.preview"),
         );
     }

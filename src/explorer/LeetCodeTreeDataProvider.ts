@@ -1,6 +1,7 @@
 // Copyright (c) jdneo. All rights reserved.
 // Licensed under the MIT license.
 
+import { localizeLabel } from "../utils/labelUtils";
 import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -35,7 +36,7 @@ export class LeetCodeTreeDataProvider implements vscode.TreeDataProvider<LeetCod
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 command: {
                     command: "leetcode.signin",
-                    title: "Sign in to LeetCode",
+                    title: "登录 LeetCode",
                 },
             };
         }
@@ -48,7 +49,7 @@ export class LeetCodeTreeDataProvider implements vscode.TreeDataProvider<LeetCod
         }
 
         return {
-            label: element.isProblem ? `[${element.id}] ${element.name}` + this.parsePremiumUnLockIconPath(element) : element.name,
+            label: element.isProblem ? `[${element.id}] ${element.name}` + this.parsePremiumUnLockIconPath(element) : localizeLabel(element.name),
             tooltip: this.getSubCategoryTooltip(element),
             collapsibleState: element.isProblem ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Collapsed,
             iconPath: this.parseIconPathFromProblemState(element),
@@ -64,7 +65,7 @@ export class LeetCodeTreeDataProvider implements vscode.TreeDataProvider<LeetCod
                 new LeetCodeNode(
                     Object.assign({}, defaultProblem, {
                         id: "notSignIn",
-                        name: "Sign in to LeetCode",
+                        name: "登录 LeetCode",
                     }),
                     false
                 ),
@@ -145,7 +146,7 @@ export class LeetCodeTreeDataProvider implements vscode.TreeDataProvider<LeetCod
             }
         }
 
-        return [`AC: ${acceptedNum}`, `Failed: ${failedNum}`, `Total: ${childernNodes.length}`].join(os.EOL);
+        return [`已通过：${acceptedNum}`, `未通过：${failedNum}`, `总题数：${childernNodes.length}`].join(os.EOL);
     }
 }
 

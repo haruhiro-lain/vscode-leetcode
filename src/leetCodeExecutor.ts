@@ -43,7 +43,7 @@ class LeetCodeExecutor implements Disposable {
         }
         if (this.nodeExecutable !== "node") {
             if (!await fse.pathExists(this.nodeExecutable)) {
-                throw new Error(`The Node.js executable does not exist on path ${this.nodeExecutable}`);
+                throw new Error(`找不到 Node.js 可执行文件：${this.nodeExecutable}`);
             }
             // Wrap the executable with "" to avoid space issue in the path.
             this.nodeExecutable = `"${this.nodeExecutable}"`;
@@ -55,7 +55,7 @@ class LeetCodeExecutor implements Disposable {
             await this.executeCommandEx(this.nodeExecutable, ["-v"]);
         } catch (error) {
             const choice: MessageItem | undefined = await window.showErrorMessage(
-                "LeetCode extension needs Node.js installed in environment path",
+                "LeetCode 插件需要 Node.js，请安装后加入 PATH，或配置 leetcode.nodePath。",
                 DialogOptions.open,
             );
             if (choice === DialogOptions.open) {
@@ -110,7 +110,7 @@ class LeetCodeExecutor implements Disposable {
 
         if (!await fse.pathExists(filePath)) {
             await fse.createFile(filePath);
-            const codeTemplate: string = await this.executeCommandWithProgressEx("Fetching problem data...", this.nodeExecutable, cmd);
+            const codeTemplate: string = await this.executeCommandWithProgressEx("正在获取题目与代码模板…", this.nodeExecutable, cmd);
             await fse.writeFile(filePath, codeTemplate);
         }
     }
@@ -134,7 +134,7 @@ class LeetCodeExecutor implements Disposable {
         if (!needTranslation) {
             cmd.push("-T");
         }
-        const solution: string = await this.executeCommandWithProgressEx("Fetching top voted solution from discussions...", this.nodeExecutable, cmd);
+        const solution: string = await this.executeCommandWithProgressEx("正在获取高赞题解…", this.nodeExecutable, cmd);
         return solution;
     }
 
@@ -143,7 +143,7 @@ class LeetCodeExecutor implements Disposable {
         if (!needTranslation) {
             cmd.push("-T");
         }
-        return await this.executeCommandWithProgressEx("Fetching problem description...", this.nodeExecutable, cmd);
+        return await this.executeCommandWithProgressEx("正在获取题目描述…", this.nodeExecutable, cmd);
     }
 
     public async listSessions(): Promise<string> {
@@ -164,7 +164,7 @@ class LeetCodeExecutor implements Disposable {
 
     public async submitSolution(filePath: string): Promise<string> {
         try {
-            return await this.executeCommandWithProgressEx("Submitting to LeetCode...", this.nodeExecutable, [await this.getLeetCodeBinaryPath(), "submit", `"${filePath}"`]);
+            return await this.executeCommandWithProgressEx("正在提交至 LeetCode，等待判题结果…", this.nodeExecutable, [await this.getLeetCodeBinaryPath(), "submit", `"${filePath}"`]);
         } catch (error) {
             if (error.result) {
                 return error.result;
@@ -175,9 +175,9 @@ class LeetCodeExecutor implements Disposable {
 
     public async testSolution(filePath: string, testString?: string): Promise<string> {
         if (testString) {
-            return await this.executeCommandWithProgressEx("Submitting to LeetCode...", this.nodeExecutable, [await this.getLeetCodeBinaryPath(), "test", `"${filePath}"`, "-t", `${testString}`]);
+            return await this.executeCommandWithProgressEx("正在运行测试，等待测试结果…", this.nodeExecutable, [await this.getLeetCodeBinaryPath(), "test", `"${filePath}"`, "-t", `${testString}`]);
         }
-        return await this.executeCommandWithProgressEx("Submitting to LeetCode...", this.nodeExecutable, [await this.getLeetCodeBinaryPath(), "test", `"${filePath}"`]);
+        return await this.executeCommandWithProgressEx("正在运行测试，等待测试结果…", this.nodeExecutable, [await this.getLeetCodeBinaryPath(), "test", `"${filePath}"`]);
     }
 
     public async switchEndpoint(endpoint: string): Promise<string> {
@@ -195,7 +195,7 @@ class LeetCodeExecutor implements Disposable {
         if (!addToFavorite) {
             commandParams.push("-d");
         }
-        await this.executeCommandWithProgressEx("Updating the favorite list...", "node", commandParams);
+        await this.executeCommandWithProgressEx("正在更新收藏列表…", "node", commandParams);
     }
 
     public async getCompaniesAndTags(): Promise<{ companies: { [key: string]: string[] }, tags: { [key: string]: string[] } }> {

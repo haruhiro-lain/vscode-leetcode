@@ -48,7 +48,7 @@ class LeetCodeManager extends EventEmitter {
         globalState.setUserStatus(data);
         await this.setCookieToCli(cookie, data.username);
         if (data.username) {
-            vscode.window.showInformationMessage(`Successfully ${data.username}.`);
+            vscode.window.showInformationMessage(`已登录：${data.username}。`);
             this.currentUser = data.username;
             this.userStatus = UserStatus.SignedIn;
             this.emit("statusChanged");
@@ -58,11 +58,11 @@ class LeetCodeManager extends EventEmitter {
     public async handleUriSignIn(uri: vscode.Uri): Promise<void> {
         try {
             await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress: vscode.Progress<{}>) => {
-                progress.report({ message: "Fetching user data..." });
+                progress.report({ message: "正在获取用户信息…" });
                 const queryParams = parseQuery(uri.query);
                 const cookie = queryParams["cookie"];
                 if (!cookie) {
-                    promptForOpenOutputChannel(`Failed to get cookie. Please log in again`, DialogType.error);
+                    promptForOpenOutputChannel(`未能获取 Cookie，请重新登录。`, DialogType.error);
                     return;
                 }
 
@@ -70,17 +70,17 @@ class LeetCodeManager extends EventEmitter {
 
             });
         } catch (error) {
-            promptForOpenOutputChannel(`Failed to log in. Please open the output channel for details`, DialogType.error);
+            promptForOpenOutputChannel(`登录失败，请打开输出面板查看详情。`, DialogType.error);
         }
     }
 
     public async handleInputCookieSignIn(): Promise<void> {
         const cookie: string | undefined = await vscode.window.showInputBox({
-            prompt: 'Enter LeetCode Cookie',
+            prompt: '请输入从 LeetCode 网站复制的 Cookie',
             password: true,
             ignoreFocusOut: true,
             validateInput: (s: string): string | undefined =>
-                s ? undefined : 'Cookie must not be empty',
+                s ? undefined : 'Cookie 不能为空',
         })
 
         await this.updateUserStatusWithCookie(cookie || '')
@@ -90,14 +90,14 @@ class LeetCodeManager extends EventEmitter {
         const picks: Array<IQuickItemEx<string>> = []
         picks.push(
             {
-                label: 'Web Authorization',
-                detail: 'Open browser to authorize login on the website',
+                label: '网页授权登录',
+                detail: '在浏览器中完成 LeetCode 网站授权',
                 value: 'WebAuth',
-                description: '[Recommended]'
+                description: '推荐'
             },
             {
-                label: 'LeetCode Cookie',
-                detail: 'Use LeetCode cookie copied from browser to login',
+                label: '使用 Cookie 登录',
+                detail: '使用从浏览器复制的 LeetCode Cookie 登录',
                 value: 'Cookie',
             }
         )
@@ -114,18 +114,18 @@ class LeetCodeManager extends EventEmitter {
         }
 
         try {
-            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: "Fetching user data..." }, async () => {
+            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: "正在获取用户信息…" }, async () => {
                 await this.handleInputCookieSignIn()
             });
         } catch (error) {
-            promptForOpenOutputChannel(`Failed to log in. Please open the output channel for details`, DialogType.error);
+            promptForOpenOutputChannel(`登录失败，请打开输出面板查看详情。`, DialogType.error);
         }
     }
 
     public async signOut(): Promise<void> {
         try {
             await leetCodeExecutor.signOut();
-            vscode.window.showInformationMessage("Successfully signed out.");
+            vscode.window.showInformationMessage("已退出登录。");
             this.currentUser = undefined;
             this.userStatus = UserStatus.SignedOut;
             globalState.removeAll();
@@ -185,7 +185,7 @@ class LeetCodeManager extends EventEmitter {
                     return resolve();
                 } else if (data.match(this.failRegex)) {
                     childProc.stdin?.end();
-                    return reject(new Error("Faile to login"));
+                    return reject(new Error("登录失败"));
                 } else if (data.match(/login: /)) {
                     childProc.stdin?.write(`${name}\n`);
                 } else if (data.match(/cookie: /)) {

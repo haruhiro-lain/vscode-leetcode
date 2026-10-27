@@ -35,7 +35,7 @@ export async function selectWorkspaceFolder(): Promise<string> {
                 OpenOption.openInNewWindow,
                 OpenOption.addToWorkspace,
             ],
-            { placeHolder: "The LeetCode workspace folder is not opened in VS Code, would you like to open it?" },
+            { placeHolder: "LeetCode 题解目录尚未在 VS Code 中打开，请选择打开方式。" },
         );
 
         // Todo: generate file first
@@ -71,7 +71,7 @@ export async function getActiveFilePath(uri?: vscode.Uri): Promise<string | unde
         return undefined;
     }
     if (textEditor.document.isDirty && !await textEditor.document.save()) {
-        vscode.window.showWarningMessage("Please save the solution file first.");
+        vscode.window.showWarningMessage("请先保存题解文件。");
         return undefined;
     }
     return wsl.useWsl() ? wsl.toWslPath(textEditor.document.uri.fsPath) : textEditor.document.uri.fsPath;
@@ -90,18 +90,18 @@ async function determineLeetCodeFolder(): Promise<string> {
     const picks: Array<IQuickItemEx<string>> = [];
     picks.push(
         {
-            label: `Default location`,
+            label: `默认位置`,
             detail: `${path.join(os.homedir(), ".leetcode")}`,
             value: `${path.join(os.homedir(), ".leetcode")}`,
         },
         {
-            label: "$(file-directory) Browse...",
+            label: "$(file-directory) 浏览文件夹…",
             value: ":browse",
         },
     );
     const choice: IQuickItemEx<string> | undefined = await vscode.window.showQuickPick(
         picks,
-        { placeHolder: "Select where you would like to save your LeetCode files" },
+        { placeHolder: "请选择 LeetCode 题解的保存目录" },
     );
     if (!choice) {
         result = "";
@@ -122,8 +122,8 @@ async function determineLeetCodeFolder(): Promise<string> {
 }
 
 enum OpenOption {
-    justOpenFile = "Just open the problem file",
-    openInCurrentWindow = "Open in current window",
-    openInNewWindow = "Open in new window",
-    addToWorkspace = "Add to workspace",
+    justOpenFile = "仅打开题解文件",
+    openInCurrentWindow = "在当前窗口打开",
+    openInNewWindow = "在新窗口打开",
+    addToWorkspace = "添加到工作区",
 }

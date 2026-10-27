@@ -1,7 +1,7 @@
 {
     "name": "vscode-leetcode",
-    "displayName": "LeetCode",
-    "description": "Solve LeetCode problems in VS Code",
+    "displayName": "LeetCode（中文定制版）",
+    "description": "在 VS Code 中浏览力扣题目、编写题解、运行测试、提交代码并查看中文判题结果。",
     "version": "0.18.4",
     "author": "LeetCode",
     "publisher": "LeetCode",
@@ -46,76 +46,76 @@
         "commands": [
             {
                 "command": "leetcode.deleteCache",
-                "title": "Delete Cache",
+                "title": "清理缓存",
                 "category": "LeetCode"
             },
             {
                 "command": "leetcode.toggleLeetCodeCn",
-                "title": "Switch Endpoint",
+                "title": "切换站点",
                 "category": "LeetCode",
                 "icon": "$(globe)"
             },
             {
                 "command": "leetcode.signin",
-                "title": "Sign In",
+                "title": "登录",
                 "category": "LeetCode",
                 "icon": "$(sign-in)"
             },
             {
                 "command": "leetcode.signout",
-                "title": "Sign Out",
+                "title": "退出登录",
                 "category": "LeetCode"
             },
             {
                 "command": "leetcode.manageSessions",
-                "title": "Manage Sessions",
+                "title": "管理刷题会话",
                 "category": "LeetCode"
             },
             {
                 "command": "leetcode.refreshExplorer",
-                "title": "Refresh",
+                "title": "刷新题目",
                 "category": "LeetCode",
                 "icon": "$(refresh)"
             },
             {
                 "command": "leetcode.pickOne",
-                "title": "Pick One",
+                "title": "随机一题",
                 "category": "LeetCode"
             },
             {
                 "command": "leetcode.showProblem",
-                "title": "Show Problem",
+                "title": "开始做题",
                 "category": "LeetCode"
             },
             {
                 "command": "leetcode.previewProblem",
-                "title": "Preview Problem",
+                "title": "预览题目",
                 "category": "LeetCode"
             },
             {
                 "command": "leetcode.searchProblem",
-                "title": "Search Problem",
+                "title": "搜索题目",
                 "category": "LeetCode",
                 "icon": "$(search)"
             },
             {
                 "command": "leetcode.showSolution",
-                "title": "Show Top Voted Solution",
+                "title": "查看高赞题解",
                 "category": "LeetCode"
             },
             {
                 "command": "leetcode.testSolution",
-                "title": "Test in LeetCode",
+                "title": "运行测试",
                 "category": "LeetCode"
             },
             {
                 "command": "leetcode.submitSolution",
-                "title": "Submit to LeetCode",
+                "title": "提交代码",
                 "category": "LeetCode"
             },
             {
                 "command": "leetcode.addFavorite",
-                "title": "Add to Favorite List",
+                "title": "收藏题目",
                 "category": "LeetCode",
                 "icon": {
                     "light": "resources/light/like.png",
@@ -124,7 +124,7 @@
             },
             {
                 "command": "leetcode.removeFavorite",
-                "title": "Remove from Favorite List",
+                "title": "取消收藏",
                 "category": "LeetCode",
                 "icon": {
                     "light": "resources/light/dislike.png",
@@ -133,12 +133,12 @@
             },
             {
                 "command": "leetcode.switchDefaultLanguage",
-                "title": "Switch Default Language",
+                "title": "切换默认编程语言",
                 "category": "LeetCode"
             },
             {
                 "command": "leetcode.problems.sort",
-                "title": "Sort Problems",
+                "title": "题目排序",
                 "category": "LeetCode",
                 "icon": "$(sort-precedence)"
             }
@@ -156,7 +156,7 @@
             "leetcode": [
                 {
                     "id": "leetCodeExplorer",
-                    "name": "Problems"
+                    "name": "题目列表"
                 }
             ]
         },
@@ -297,7 +297,7 @@
                         "type": "boolean",
                         "default": false,
                         "scope": "application",
-                        "description": "Hide solved problems."
+                        "description": "隐藏已通过的题目。"
                     },
                     "leetcode.defaultLanguage": {
                         "type": "string",
@@ -321,7 +321,7 @@
                             "typescript"
                         ],
                         "scope": "application",
-                        "description": "Default language for solving the problems."
+                        "description": "刷题时默认使用的编程语言。"
                     },
                     "leetcode.showDescription": {
                         "type": "string",
@@ -333,48 +333,50 @@
                             "None"
                         ],
                         "enumDescriptions": [
-                            "Show the problem description in a new webview window",
-                            "Show the problem description in the file's comment"
+                            "在题目预览页面显示",
+                            "在题解文件注释中显示",
+                            "同时在预览页面和文件注释中显示",
+                            "不显示题目描述"
                         ],
                         "scope": "application",
-                        "description": "Specify where to show the description."
+                        "description": "题目描述的显示位置。"
                     },
                     "leetcode.showCommentDescription": {
                         "type": "boolean",
                         "default": false,
                         "scope": "application",
-                        "description": "[Deprecated] Include problem description in comments.",
-                        "deprecationMessage": "This setting will be deprecated in 0.17.0, please use 'leetcode.showDescription' instead"
+                        "description": "【已弃用】在题解文件的注释中包含题目描述。",
+                        "deprecationMessage": "请改用 leetcode.showDescription 设置题目描述的显示位置。"
                     },
                     "leetcode.hint.setDefaultLanguage": {
                         "type": "boolean",
                         "default": true,
                         "scope": "application",
-                        "description": "Show a hint to set the default language."
+                        "description": "提示设置默认编程语言。"
                     },
                     "leetcode.hint.configWebviewMarkdown": {
                         "type": "boolean",
                         "default": true,
                         "scope": "application",
-                        "description": "Show a hint to change webview appearance through markdown config."
+                        "description": "提示通过 Markdown 设置调整题目和结果页面的外观。"
                     },
                     "leetcode.hint.commentDescription": {
                         "type": "boolean",
                         "default": true,
                         "scope": "application",
-                        "description": "Show a hint to enable comment description in solution code file."
+                        "description": "提示配置题解文件中的题目描述。"
                     },
                     "leetcode.hint.commandShortcut": {
                         "type": "boolean",
                         "default": true,
                         "scope": "application",
-                        "description": "Show a hint to configure commands key binding."
+                        "description": "提示配置提交与测试的键盘快捷方式。"
                     },
                     "leetcode.useWsl": {
                         "type": "boolean",
                         "default": false,
                         "scope": "application",
-                        "description": "Use the Windows Subsystem for Linux."
+                        "description": "使用 Windows 的 Linux 子系统（WSL）运行 LeetCode CLI。"
                     },
                     "leetcode.endpoint": {
                         "type": "string",
@@ -384,24 +386,28 @@
                             "leetcode",
                             "leetcode-cn"
                         ],
-                        "description": "Endpoint of the user account."
+                        "description": "LeetCode 账号所使用的站点，中国站与国际站账号相互独立。",
+                        "enumDescriptions": [
+                            "LeetCode 国际站（leetcode.com）",
+                            "力扣中国站（leetcode.cn）"
+                        ]
                     },
                     "leetcode.useEndpointTranslation": {
                         "type": "boolean",
                         "default": true,
                         "scope": "application",
-                        "description": "Use endpoint's translation (if available)"
+                        "description": "使用站点提供的题目翻译（中国站通常为中文）。"
                     },
                     "leetcode.workspaceFolder": {
                         "type": "string",
                         "scope": "application",
-                        "description": "The path of the workspace folder to store the problem files.",
+                        "description": "保存 LeetCode 题解文件的工作目录。",
                         "default": ""
                     },
                     "leetcode.filePath": {
                         "type": "object",
                         "scope": "application",
-                        "description": "The output folder and filename to save the problem files.",
+                        "description": "题解文件相对于工作目录的子目录和文件名模板。",
                         "properties": {
                             "default": {
                                 "type": "object",
@@ -643,7 +649,7 @@
                         "type": "boolean",
                         "default": true,
                         "scope": "application",
-                        "description": "Show the LeetCode status bar or not."
+                        "description": "在状态栏显示当前登录的 LeetCode 账号。"
                     },
                     "leetcode.editor.shortcuts": {
                         "type": "array",
@@ -662,32 +668,32 @@
                                 "description"
                             ],
                             "enumDescriptions": [
-                                "Submit your answer to LeetCode.",
-                                "Test your answer with customized test cases.",
-                                "Star or unstar the current problem.",
-                                "Show the top voted solution for the current problem.",
-                                "Show the problem description page."
+                                "提交代码并在 VS Code 内查看判题结果。",
+                                "使用默认或自定义用例运行测试。",
+                                "收藏或取消收藏当前题目。",
+                                "查看当前题目的高赞题解。",
+                                "查看题目描述。"
                             ]
                         },
-                        "description": "Customize the shortcuts in editors."
+                        "description": "题解代码中的快捷操作。"
                     },
                     "leetcode.enableSideMode": {
                         "type": "boolean",
                         "default": true,
                         "scope": "application",
-                        "description": "Determine whether to group all webview pages into the second editor column when solving problems."
+                        "description": "做题时将题目、题解和判题结果统一显示在右侧编辑器组。"
                     },
                     "leetcode.nodePath": {
                         "type": "string",
                         "default": "node",
                         "scope": "application",
-                        "description": "The Node.js executable path. for example, C:\\Program Files\\nodejs\\node.exe"
+                        "description": "Node.js 可执行文件路径，例如 C:\\Program Files\\nodejs\\node.exe。"
                     },
                     "leetcode.colorizeProblems": {
                         "type": "boolean",
                         "default": true,
                         "scope": "application",
-                        "description": "Add difficulty badge and colorize problems files in explorer tree."
+                        "description": "在题目列表中显示难度徽标和颜色。"
                     },
                     "leetcode.problems.sortStrategy": {
                         "type": "string",
@@ -698,13 +704,18 @@
                             "Acceptance Rate (Ascending)",
                             "Acceptance Rate (Descending)"
                         ],
-                        "description": "Sorting strategy for problems list."
+                        "description": "题目列表的排序方式。",
+                        "enumDescriptions": [
+                            "保持默认顺序",
+                            "按通过率升序",
+                            "按通过率降序"
+                        ]
                     },
                     "leetcode.allowReportData": {
                         "type": "boolean",
                         "default": true,
                         "scope": "application",
-                        "description": "Allow LeetCode to report anonymous usage data to improve the product."
+                        "description": "允许 LeetCode 上报匿名使用数据以改进产品。"
                     }
                 }
             }

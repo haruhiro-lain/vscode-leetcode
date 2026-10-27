@@ -49,7 +49,7 @@ export class CustomCodeLensProvider implements vscode.CodeLensProvider {
 
         if (shortcuts.indexOf("submit") >= 0) {
             codeLens.push(new vscode.CodeLens(range, {
-                title: "Submit",
+                title: "提交代码",
                 command: "leetcode.submitSolution",
                 arguments: [document.uri],
             }));
@@ -57,7 +57,7 @@ export class CustomCodeLensProvider implements vscode.CodeLensProvider {
 
         if (shortcuts.indexOf("test") >= 0) {
             codeLens.push(new vscode.CodeLens(range, {
-                title: "Test",
+                title: "运行测试",
                 command: "leetcode.testSolution",
                 arguments: [document.uri],
             }));
@@ -65,7 +65,7 @@ export class CustomCodeLensProvider implements vscode.CodeLensProvider {
 
         if (shortcuts.indexOf("star") >= 0 && node) {
             codeLens.push(new vscode.CodeLens(range, {
-                title: node.isFavorite ? "Unstar" : "Star",
+                title: node.isFavorite ? "取消收藏" : "收藏",
                 command: node.isFavorite ? "leetcode.removeFavorite" : "leetcode.addFavorite",
                 arguments: [node],
             }));
@@ -73,7 +73,7 @@ export class CustomCodeLensProvider implements vscode.CodeLensProvider {
 
         if (shortcuts.indexOf("solution") >= 0) {
             codeLens.push(new vscode.CodeLens(range, {
-                title: "Solution",
+                title: "题解",
                 command: "leetcode.showSolution",
                 arguments: [document.uri],
             }));
@@ -81,7 +81,7 @@ export class CustomCodeLensProvider implements vscode.CodeLensProvider {
 
         if (shortcuts.indexOf("description") >= 0) {
             codeLens.push(new vscode.CodeLens(range, {
-                title: "Description",
+                title: "题目描述",
                 command: "leetcode.previewProblem",
                 arguments: [document.uri],
             }));

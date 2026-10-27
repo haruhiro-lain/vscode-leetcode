@@ -11,7 +11,7 @@ export async function switchDefaultLanguage(): Promise<void> {
     for (const language of languages) {
         languageItems.push({
             label: language,
-            description: defaultLanguage === language ? "Currently used" : undefined,
+            description: defaultLanguage === language ? "当前使用" : undefined,
         });
     }
     // Put the default language at the top of the list
@@ -25,7 +25,7 @@ export async function switchDefaultLanguage(): Promise<void> {
     });
 
     const selectedItem: QuickPickItem | undefined = await window.showQuickPick(languageItems, {
-        placeHolder: "Please the default language",
+        placeHolder: "请选择默认编程语言",
         ignoreFocusOut: true,
     });
 
@@ -34,5 +34,5 @@ export async function switchDefaultLanguage(): Promise<void> {
     }
 
     leetCodeConfig.update("defaultLanguage", selectedItem.label, true /* Global */);
-    window.showInformationMessage(`Successfully set the default language to ${selectedItem.label}`);
+    window.showInformationMessage(`默认编程语言已设置为 ${selectedItem.label}`);
 }

@@ -25,21 +25,21 @@ export async function testSolution(uri?: vscode.Uri): Promise<void> {
         const picks: Array<IQuickItemEx<string>> = [];
         picks.push(
             {
-                label: "$(three-bars) Default test cases",
+                label: "$(three-bars) 默认测试用例",
                 description: "",
-                detail: "Test with the default cases",
+                detail: "使用题目自带的测试用例",
                 value: ":default",
             },
             {
-                label: "$(pencil) Write directly...",
+                label: "$(pencil) 输入测试用例…",
                 description: "",
-                detail: "Write test cases in input box",
+                detail: "在输入框中填写自定义测试用例",
                 value: ":direct",
             },
             {
-                label: "$(file-text) Browse...",
+                label: "$(file-text) 从文件读取…",
                 description: "",
-                detail: "Test with the written cases in file",
+                detail: "使用文件中的测试用例",
                 value: ":file",
             },
         );
@@ -55,9 +55,9 @@ export async function testSolution(uri?: vscode.Uri): Promise<void> {
                 break;
             case ":direct":
                 const testString: string | undefined = await vscode.window.showInputBox({
-                    prompt: "Enter the test cases.",
-                    validateInput: (s: string): string | undefined => s && s.trim() ? undefined : "Test case must not be empty.",
-                    placeHolder: "Example: [1,2,3]\\n4",
+                    prompt: "请输入测试用例，多个参数之间使用 \\n 分隔。",
+                    validateInput: (s: string): string | undefined => s && s.trim() ? undefined : "测试用例不能为空。",
+                    placeHolder: "例如：[1,2,3]\\n4",
                     ignoreFocusOut: true,
                 });
                 if (testString) {
@@ -71,7 +71,7 @@ export async function testSolution(uri?: vscode.Uri): Promise<void> {
                     if (input) {
                         result = await leetCodeExecutor.testSolution(filePath, parseTestString(input.replace(/\r?\n/g, "\\n")));
                     } else {
-                        vscode.window.showErrorMessage("The selected test file must not be empty.");
+                        vscode.window.showErrorMessage("所选测试文件不能为空。");
                     }
                 }
                 break;
@@ -83,7 +83,7 @@ export async function testSolution(uri?: vscode.Uri): Promise<void> {
         }
         leetCodeSubmissionProvider.show(result);
     } catch (error) {
-        await promptForOpenOutputChannel("Failed to test the solution. Please open the output channel for details.", DialogType.error);
+        await promptForOpenOutputChannel("测试失败：请打开输出面板查看详情。", DialogType.error);
     }
 }
 

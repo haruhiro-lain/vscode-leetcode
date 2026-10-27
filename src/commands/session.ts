@@ -34,7 +34,7 @@ export async function getSessionList(): Promise<ISession[]> {
 
 export async function manageSessions(): Promise<void> {
     const choice: IQuickItemEx<ISession | string> | undefined = await vscode.window.showQuickPick(parseSessionsToPicks(true /* includeOperation */));
-    if (!choice || choice.description === "Active") {
+    if (!choice || choice.description === "当前使用") {
         return;
     }
     if (choice.value === ":createSession") {
@@ -47,10 +47,10 @@ export async function manageSessions(): Promise<void> {
     }
     try {
         await leetCodeExecutor.enableSession((choice.value as ISession).id);
-        vscode.window.showInformationMessage(`Successfully switched to session '${choice.label}'.`);
+        vscode.window.showInformationMessage(`已切换至会话「${choice.label}」。`);
         await vscode.commands.executeCommand("leetcode.refreshExplorer");
     } catch (error) {
-        await promptForOpenOutputChannel("Failed to switch session. Please open the output channel for details.", DialogType.error);
+        await promptForOpenOutputChannel("切换会话失败，请打开输出面板查看详情。", DialogType.error);
     }
 }
 
@@ -60,8 +60,8 @@ async function parseSessionsToPicks(includeOperations: boolean = false): Promise
             const sessions: ISession[] = await getSessionList();
             const picks: Array<IQuickItemEx<ISession | string>> = sessions.map((s: ISession) => Object.assign({}, {
                 label: `${s.active ? "$(check) " : ""}${s.name}`,
-                description: s.active ? "Active" : "",
-                detail: `AC Questions: ${s.acQuestions}, AC Submits: ${s.acSubmits}`,
+                description: s.active ? "当前使用" : "",
+                detail: `已通过题目：${s.acQuestions}，通过提交：${s.acSubmits}`,
                 value: s,
             }));
 
@@ -70,45 +70,45 @@ async function parseSessionsToPicks(includeOperations: boolean = false): Promise
             }
             resolve(picks);
         } catch (error) {
-            return await promptForOpenOutputChannel("Failed to list sessions. Please open the output channel for details.", DialogType.error);
+            return await promptForOpenOutputChannel("获取会话列表失败，请打开输出面板查看详情。", DialogType.error);
         }
     });
 }
 
 function parseSessionManagementOperations(): Array<IQuickItemEx<string>> {
     return [{
-        label: "$(plus) Create a session",
+        label: "$(plus) 创建刷题会话",
         description: "",
-        detail: "Click this item to create a session",
+        detail: "创建独立的刷题记录",
         value: ":createSession",
     }, {
-        label: "$(trashcan) Delete a session",
+        label: "$(trashcan) 删除刷题会话",
         description: "",
-        detail: "Click this item to DELETE a session",
+        detail: "删除指定的刷题记录",
         value: ":deleteSession",
     }];
 }
 
 async function createSession(): Promise<void> {
     const session: string | undefined = await vscode.window.showInputBox({
-        prompt: "Enter the new session name.",
-        validateInput: (s: string): string | undefined => s && s.trim() ? undefined : "Session name must not be empty",
+        prompt: "请输入新会话的名称。",
+        validateInput: (s: string): string | undefined => s && s.trim() ? undefined : "会话名称不能为空",
     });
     if (!session) {
         return;
     }
     try {
         await leetCodeExecutor.createSession(session);
-        vscode.window.showInformationMessage("New session created, you can switch to it by clicking the status bar.");
+        vscode.window.showInformationMessage("会话已创建，可点击状态栏切换。");
     } catch (error) {
-        await promptForOpenOutputChannel("Failed to create session. Please open the output channel for details.", DialogType.error);
+        await promptForOpenOutputChannel("创建会话失败，请打开输出面板查看详情。", DialogType.error);
     }
 }
 
 async function deleteSession(): Promise<void> {
     const choice: IQuickItemEx<ISession | string> | undefined = await vscode.window.showQuickPick(
         parseSessionsToPicks(false /* includeOperation */),
-        { placeHolder: "Please select the session you want to delete" },
+        { placeHolder: "请选择要删除的刷题会话" },
     );
     if (!choice) {
         return;
@@ -116,12 +116,12 @@ async function deleteSession(): Promise<void> {
 
     const selectedSession: ISession = choice.value as ISession;
     if (selectedSession.active) {
-        vscode.window.showInformationMessage("Cannot delete an active session.");
+        vscode.window.showInformationMessage("不能删除正在使用的会话。");
         return;
     }
 
     const action: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(
-        `This operation cannot be reverted. Are you sure to delete the session: ${selectedSession.name}?`,
+        `此操作无法撤销，确定删除会话「${selectedSession.name}」吗？`,
         DialogOptions.yes,
         DialogOptions.no,
     );
@@ -130,19 +130,19 @@ async function deleteSession(): Promise<void> {
     }
 
     const confirm: string | undefined = await vscode.window.showInputBox({
-        prompt: "Enter 'yes' to confirm deleting the session",
+        prompt: "请输入 yes 确认删除会话",
         validateInput: (value: string): string => {
             if (value === "yes") {
                 return "";
             } else {
-                return "Enter 'yes' to confirm";
+                return "请输入 yes 进行确认";
             }
         },
     });
 
     if (confirm === "yes") {
         await leetCodeExecutor.deleteSession(selectedSession.id);
-        vscode.window.showInformationMessage("The session has been successfully deleted.");
+        vscode.window.showInformationMessage("会话已删除。");
     }
 }
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { commands, ViewColumn } from "vscode";
+import { localizeLabel } from "../utils/labelUtils";
 import { getLeetCodeEndpoint } from "../commands/plugin";
 import { Endpoint, IProblem } from "../shared";
 import { ILeetCodeWebviewOption, LeetCodeWebview } from "./LeetCodeWebview";
@@ -27,12 +28,12 @@ class LeetCodePreviewProvider extends LeetCodeWebview {
     protected getWebviewOption(): ILeetCodeWebviewOption {
         if (!this.sideMode) {
             return {
-                title: `${this.node.name}: Preview`,
+                title: `${this.node.name}：题目预览`,
                 viewColumn: ViewColumn.One,
             };
         } else {
             return {
-                title: "Description",
+                title: "题目描述",
                 viewColumn: ViewColumn.Two,
                 preserveFocus: true,
             };
@@ -41,7 +42,7 @@ class LeetCodePreviewProvider extends LeetCodeWebview {
 
     protected getWebviewContent(): string {
         const button: { element: string; script: string; style: string } = {
-            element: `<button id="solve">Code Now</button>`,
+            element: `<button id="solve">开始做题</button>`,
             script: `const button = document.getElementById('solve');
                     button.onclick = () => vscode.postMessage({
                         command: 'ShowProblem',
@@ -69,24 +70,24 @@ class LeetCodePreviewProvider extends LeetCodeWebview {
         const head: string = markdownEngine.render(`# [${title}](${url})`);
         const info: string = markdownEngine.render(
             [
-                `| Category | Difficulty | Likes | Dislikes |`,
+                `| 分类 | 难度 | 赞同 | 不赞同 |`,
                 `| :------: | :--------: | :---: | :------: |`,
-                `| ${category} | ${difficulty} | ${likes} | ${dislikes} |`,
+                `| ${localizeLabel(category)} | ${localizeLabel(difficulty)} | ${likes} | ${dislikes} |`,
             ].join("\n")
         );
         const tags: string = [
             `<details>`,
-            `<summary><strong>Tags</strong></summary>`,
+            `<summary><strong>标签</strong></summary>`,
             markdownEngine.render(this.description.tags.map((t: string) => `[\`${t}\`](${this.getTagLink(t)})`).join(" | ")),
             `</details>`,
         ].join("\n");
         const companies: string = [
             `<details>`,
-            `<summary><strong>Companies</strong></summary>`,
+            `<summary><strong>公司</strong></summary>`,
             markdownEngine.render(this.description.companies.map((c: string) => `\`${c}\``).join(" | ")),
             `</details>`,
         ].join("\n");
-        const links: string = markdownEngine.render(`[Submissions](${this.getSubmissionsLink(url)}) | [Solution](${this.getSolutionsLink(url)})`);
+        const links: string = markdownEngine.render(`[提交记录](${this.getSubmissionsLink(url)}) | [题解](${this.getSolutionsLink(url)})`);
         return `
             <!DOCTYPE html>
             <html>

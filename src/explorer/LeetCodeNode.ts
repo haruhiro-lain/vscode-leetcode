@@ -49,7 +49,7 @@ export class LeetCodeNode {
 
     public get previewCommand(): Command {
         return {
-            title: "Preview Problem",
+            title: "预览题目",
             command: "leetcode.previewProblem",
             arguments: [this],
         };

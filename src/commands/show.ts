@@ -1,6 +1,7 @@
 // Copyright (c) jdneo. All rights reserved.
 // Licensed under the MIT license.
 
+import { localizeLabel } from "../utils/labelUtils";
 import * as _ from "lodash";
 import * as path from "path";
 import * as unescapeJS from "unescape-js";
@@ -38,12 +39,12 @@ export async function previewProblem(input: IProblem | vscode.Uri, isSideMode: b
         const activeFilePath: string = input.fsPath;
         const id: string = await getNodeIdFromFile(activeFilePath);
         if (!id) {
-            vscode.window.showErrorMessage(`Failed to resolve the problem id from file: ${activeFilePath}.`);
+            vscode.window.showErrorMessage(`无法从文件中识别题号：${activeFilePath}。`);
             return;
         }
         const cachedNode: IProblem | undefined = explorerNodeManager.getNodeById(id);
         if (!cachedNode) {
-            vscode.window.showErrorMessage(`Failed to resolve the problem with id: ${id}.`);
+            vscode.window.showErrorMessage(`未找到题号为 ${id} 的题目。`);
             return;
         }
         node = cachedNode;
@@ -84,7 +85,7 @@ export async function searchProblem(): Promise<void> {
     }
     const choice: IQuickItemEx<IProblem> | undefined = await vscode.window.showQuickPick(parseProblemsToPicks(list.listProblems()), {
         matchOnDetail: true,
-        placeHolder: "Select one problem",
+        placeHolder: "请选择一道题目，可输入题号或题目名称搜索",
     });
     if (!choice) {
         return;
@@ -106,7 +107,7 @@ export async function showSolution(input: LeetCodeNode | vscode.Uri): Promise<vo
     }
 
     if (!problemInput) {
-        vscode.window.showErrorMessage("Invalid input to fetch the solution data.");
+        vscode.window.showErrorMessage("无法确定要查看题解的题目。");
         return;
     }
 
@@ -120,7 +121,7 @@ export async function showSolution(input: LeetCodeNode | vscode.Uri): Promise<vo
         leetCodeSolutionProvider.show(unescapeJS(solution));
     } catch (error) {
         leetCodeChannel.appendLine(error.toString());
-        await promptForOpenOutputChannel("Failed to fetch the top voted solution. Please open the output channel for details.", DialogType.error);
+        await promptForOpenOutputChannel("获取高赞题解失败，请打开输出面板查看详情。", DialogType.error);
     }
 }
 
@@ -133,14 +134,14 @@ async function fetchProblemLanguage(): Promise<string | undefined> {
     const language: string | undefined =
         defaultLanguage ||
         (await vscode.window.showQuickPick(languages, {
-            placeHolder: "Select the language you want to use",
+            placeHolder: "请选择编程语言",
             ignoreFocusOut: true,
         }));
     // fire-and-forget default language query
     (async (): Promise<void> => {
         if (language && !defaultLanguage && leetCodeConfig.get<boolean>("hint.setDefaultLanguage")) {
             const choice: vscode.MessageItem | undefined = await vscode.window.showInformationMessage(
-                `Would you like to set '${language}' as your default language?`,
+                `是否将 ${language} 设为默认编程语言？`,
                 DialogOptions.yes,
                 DialogOptions.no,
                 DialogOptions.never
@@ -180,7 +181,7 @@ async function showProblemInternal(node: IProblem): Promise<void> {
         if (finalPath) {
             finalPath = await resolveRelativePath(finalPath, node, language);
             if (!finalPath) {
-                leetCodeChannel.appendLine("Showing problem canceled by user.");
+                leetCodeChannel.appendLine("已取消打开题目。");
                 return;
             }
         }
@@ -198,8 +199,8 @@ async function showProblemInternal(node: IProblem): Promise<void> {
             }),
             promptHintMessage(
                 "hint.commentDescription",
-                'You can config how to show the problem description through "leetcode.showDescription".',
-                "Open settings",
+                '可在 leetcode.showDescription 中设置题目描述的显示方式。',
+                "打开设置",
                 (): Promise<any> => openSettingsEditor("leetcode.showDescription")
             ),
         ];
@@ -209,7 +210,7 @@ async function showProblemInternal(node: IProblem): Promise<void> {
 
         await Promise.all(promises);
     } catch (error) {
-        await promptForOpenOutputChannel(`${error} Please open the output channel for details.`, DialogType.error);
+        await promptForOpenOutputChannel(`${error} 请打开输出面板查看详情。`, DialogType.error);
     }
 }
 
@@ -224,7 +225,7 @@ async function parseProblemsToPicks(p: Promise<IProblem[]>): Promise<Array<IQuic
                 {
                     label: `${parseProblemDecorator(problem.state, problem.locked)}${problem.id}.${problem.name}`,
                     description: "",
-                    detail: `AC rate: ${problem.passRate}, Difficulty: ${problem.difficulty}`,
+                    detail: `通过率：${problem.passRate}，难度：${localizeLabel(problem.difficulty)}`,
                     value: problem,
                 }
             )
@@ -283,7 +284,7 @@ async function resolveRelativePath(relativePath: string, node: IProblem, selecte
             case "company":
                 return company;
             default:
-                const errorMsg: string = `The config '${placeholder}' is not supported.`;
+                const errorMsg: string = `不支持路径占位符 ${placeholder}。`;
                 leetCodeChannel.appendLine(errorMsg);
                 throw new Error(errorMsg);
         }
@@ -296,7 +297,7 @@ async function resolveTagForProblem(problem: IProblem): Promise<string | undefin
     }
     return await vscode.window.showQuickPick(problem.tags, {
         matchOnDetail: true,
-        placeHolder: "Multiple tags available, please select one",
+        placeHolder: "存在多个分类，请选择一个",
         ignoreFocusOut: true,
     });
 }
@@ -307,7 +308,7 @@ async function resolveCompanyForProblem(problem: IProblem): Promise<string | und
     }
     return await vscode.window.showQuickPick(problem.companies, {
         matchOnDetail: true,
-        placeHolder: "Multiple tags available, please select one",
+        placeHolder: "存在多个分类，请选择一个",
         ignoreFocusOut: true,
     });
 }

@@ -3,9 +3,9 @@ import { FileDecoration, FileDecorationProvider, ProviderResult, ThemeColor, Uri
 
 export class LeetCodeTreeItemDecorationProvider implements FileDecorationProvider {
     private readonly DIFFICULTY_BADGE_LABEL: { [key: string]: string } = {
-        easy: "E",
-        medium: "M",
-        hard: "H",
+        easy: "简",
+        medium: "中",
+        hard: "难",
     };
 
     private readonly ITEM_COLOR: { [key: string]: ThemeColor } = {

@@ -9,10 +9,10 @@ export function LcAxios<T = any>(path: string, settings?: AxiosRequestConfig): A
     const cookie = globalState.getCookie();
     if (!cookie) {
         promptForOpenOutputChannel(
-            `Failed to obtain the cookie. Please log in again.`,
+            `未能获取 Cookie，请重新登录。`,
             DialogType.error
         );
-        return Promise.reject("Failed to obtain the cookie.");
+        return Promise.reject("未能获取 Cookie。");
     }
     return axios(path, {
         headers: {

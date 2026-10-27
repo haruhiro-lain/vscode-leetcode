@@ -20,13 +20,13 @@ class LeetCodeSolutionProvider extends LeetCodeWebview {
     protected getWebviewOption(): ILeetCodeWebviewOption {
         if (leetCodePreviewProvider.isSideMode()) {
             return {
-                title: "Solution",
+                title: "题解",
                 viewColumn: ViewColumn.Two,
                 preserveFocus: true,
             };
         } else {
             return {
-                title: `Solution: ${this.problemName}`,
+                title: `题解：${this.problemName}`,
                 viewColumn: ViewColumn.One,
             };
         }
@@ -38,7 +38,7 @@ class LeetCodeSolutionProvider extends LeetCodeWebview {
         const head: string = markdownEngine.render(`# [${title}](${url})`);
         const auth: string = `[${author}](https://leetcode.com/${author}/)`;
         const info: string = markdownEngine.render([
-            `| Language |  Author  |  Votes   |`,
+            `| 语言 | 作者 | 赞同数 |`,
             `| :------: | :------: | :------: |`,
             `| ${lang}  | ${auth}  | ${votes} |`,
         ].join("\n"));

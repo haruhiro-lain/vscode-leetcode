@@ -30,7 +30,7 @@ import { globalState } from "./globalState";
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     try {
         if (!(await leetCodeExecutor.meetRequirements(context))) {
-            throw new Error("The environment doesn't meet requirements.");
+            throw new Error("当前环境不满足插件运行要求。");
         }
 
         leetCodeManager.on("statusChanged", () => {
@@ -105,7 +105,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         vscode.window.registerUriHandler({ handleUri: leetCodeManager.handleUriSignIn });
     } catch (error) {
         leetCodeChannel.appendLine(error.toString());
-        promptForOpenOutputChannel("Extension initialization failed. Please open output channel for details.", DialogType.error);
+        promptForOpenOutputChannel("插件初始化失败，请打开输出面板查看详情。", DialogType.error);
     }
 }
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { ViewColumn } from "vscode";
+import { translateHeading, translateMessage } from "../utils/labelUtils";
 import { openKeybindingsEditor, promptHintMessage } from "../utils/uiUtils";
 import { ILeetCodeWebviewOption, LeetCodeWebview } from "./LeetCodeWebview";
 import { markdownEngine } from "./markdownEngine";
@@ -19,19 +20,19 @@ class LeetCodeSubmissionProvider extends LeetCodeWebview {
 
     protected getWebviewOption(): ILeetCodeWebviewOption {
         return {
-            title: "Submission",
+            title: "提交结果",
             viewColumn: ViewColumn.Two,
         };
     }
 
     protected getWebviewContent(): string {
         const styles: string = markdownEngine.getStyles();
-        const title: string = `## ${this.result.messages[0]}`;
-        const messages: string[] = this.result.messages.slice(1).map((m: string) => `* ${m}`);
+        const title: string = `## ${translateMessage(this.result.messages[0])}`;
+        const messages: string[] = this.result.messages.slice(1).map((m: string) => `* ${translateMessage(m)}`);
         const sections: string[] = Object.keys(this.result)
             .filter((key: string) => key !== "messages")
             .map((key: string) => [
-                `### ${key}`,
+                `### ${translateHeading(key)}`,
                 "```",
                 this.result[key].join("\n"),
                 "```",
@@ -64,8 +65,8 @@ class LeetCodeSubmissionProvider extends LeetCodeWebview {
     private async showKeybindingsHint(): Promise<void> {
         await promptHintMessage(
             "hint.commandShortcut",
-            'You can customize shortcut key bindings in File > Preferences > Keyboard Shortcuts with query "leetcode".',
-            "Open Keybindings",
+            '可在「键盘快捷方式」中搜索 leetcode，自定义提交和测试的快捷键。',
+            "打开键盘快捷方式",
             (): Promise<any> => openKeybindingsEditor("leetcode solution"),
         );
     }

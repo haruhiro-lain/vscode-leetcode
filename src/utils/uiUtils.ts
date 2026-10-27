@@ -7,11 +7,11 @@ import { leetCodeChannel } from "../leetCodeChannel";
 import { getWorkspaceConfiguration } from "./settingUtils";
 
 export namespace DialogOptions {
-    export const open: vscode.MessageItem = { title: "Open" };
-    export const yes: vscode.MessageItem = { title: "Yes" };
-    export const no: vscode.MessageItem = { title: "No", isCloseAffordance: true };
-    export const never: vscode.MessageItem = { title: "Never" };
-    export const singUp: vscode.MessageItem = { title: "Sign up" };
+    export const open: vscode.MessageItem = { title: "打开" };
+    export const yes: vscode.MessageItem = { title: "是" };
+    export const no: vscode.MessageItem = { title: "取消", isCloseAffordance: true };
+    export const never: vscode.MessageItem = { title: "不再提示" };
+    export const singUp: vscode.MessageItem = { title: "注册" };
 }
 
 export async function promptForOpenOutputChannel(message: string, type: DialogType): Promise<void> {
@@ -37,7 +37,7 @@ export async function promptForOpenOutputChannel(message: string, type: DialogTy
 
 export async function promptForSignIn(): Promise<void> {
     const choice: vscode.MessageItem | undefined = await vscode.window.showInformationMessage(
-        "Please sign in to LeetCode.",
+        "请先登录 LeetCode。",
         DialogOptions.yes,
         DialogOptions.no,
         DialogOptions.singUp,
@@ -60,7 +60,7 @@ export async function promptForSignIn(): Promise<void> {
 
 export async function promptHintMessage(config: string, message: string, choiceConfirm: string, onConfirm: () => Promise<any>): Promise<void> {
     if (getWorkspaceConfiguration().get<boolean>(config)) {
-        const choiceNoShowAgain: string = "Don't show again";
+        const choiceNoShowAgain: string = "不再提示";
         const choice: string | undefined = await vscode.window.showInformationMessage(
             message, choiceConfirm, choiceNoShowAgain,
         );
@@ -87,7 +87,7 @@ export async function showFileSelectDialog(fsPath?: string): Promise<vscode.Uri[
         canSelectFiles: true,
         canSelectFolders: false,
         canSelectMany: false,
-        openLabel: "Select",
+        openLabel: "选择",
     };
     return await vscode.window.showOpenDialog(options);
 }
@@ -110,7 +110,7 @@ export async function showDirectorySelectDialog(fsPath?: string): Promise<vscode
         canSelectFiles: false,
         canSelectFolders: true,
         canSelectMany: false,
-        openLabel: "Select",
+        openLabel: "选择",
     };
     return await vscode.window.showOpenDialog(options);
 }
