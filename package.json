@@ -2,7 +2,7 @@
     "name": "vscode-leetcode",
     "displayName": "LeetCode-CN",
     "description": "在 VS Code 中浏览力扣题目、编写题解、运行测试、提交代码并查看中文判题结果。",
-    "version": "0.18.8",
+    "version": "0.18.9",
     "author": "LeetCode",
     "publisher": "LeetCode",
     "license": "MIT",
@@ -26,6 +26,7 @@
     ],
     "preview": true,
     "activationEvents": [
+        "onStartupFinished",
         "onCommand:leetcode.toggleLeetCodeCn",
         "onCommand:leetcode.signin",
         "onCommand:leetcode.signout",

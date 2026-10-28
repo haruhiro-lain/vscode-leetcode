@@ -37,3 +37,7 @@ test('unknown variables and empty paths never create literal placeholder folders
     assert.throws(() => resolveConfiguredWorkspacePath('${unknown}/algo', path.resolve('repo')), /仅支持/);
     assert.throws(() => resolveConfiguredWorkspacePath('   ', path.resolve('repo')), /设置/);
 });
+
+test('editor actions activate without opening the LeetCode sidebar', () => {
+    assert.ok(manifest.activationEvents.includes('onStartupFinished'));
+});
