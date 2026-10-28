@@ -1,28 +1,30 @@
 import axios, { AxiosRequestConfig, AxiosPromise } from "axios";
 import { omit } from "lodash";
 import { globalState } from "../globalState";
-import { DialogType, promptForOpenOutputChannel } from "./uiUtils";
+import { getRequestProxy } from "./networkUtils";
+import { requestDirect } from "./directHttpUtils";
 
-const referer = "vscode-lc-extension";
-
-export function LcAxios<T = any>(path: string, settings?: AxiosRequestConfig): AxiosPromise<T> {
-    const cookie = globalState.getCookie();
+export function LcAxios<T = any>(path: string, settings?: AxiosRequestConfig, candidateCookie?: string): AxiosPromise<T> {
+    const cookie = candidateCookie ?? globalState.getCookie();
     if (!cookie) {
-        promptForOpenOutputChannel(
-            `未能获取 Cookie，请重新登录。`,
-            DialogType.error
-        );
-        return Promise.reject("未能获取 Cookie。");
+        return Promise.reject(new Error("未能获取 Cookie，请重新登录。"));
     }
-    return axios(path, {
+    const origin = new URL(path).origin;
+    const csrf = /(?:^|;\s*)csrftoken=([^;]+)/.exec(cookie)?.[1];
+    const options: AxiosRequestConfig = {
+        timeout: 15000,
         headers: {
-            referer,
+            "referer": origin + "/",
+            "origin": origin,
             "content-type": "application/json",
-            cookie,
+            "cookie": cookie,
+            ...(csrf ? { "X-CSRFToken": csrf } : {}),
             ...(settings && settings.headers),
         },
         xsrfCookieName: "csrftoken",
         xsrfHeaderName: "X-CSRFToken",
         ...(settings && omit(settings, "headers")),
-    });
+        proxy: getRequestProxy(path),
+    };
+    return options.proxy === false ? requestDirect<T>(path, options) : axios(path, options);
 }

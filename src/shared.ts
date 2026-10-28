@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import * as vscode from "vscode";
+import { buildAuthLoginUrl } from "./utils/extensionIdentity";
 
 export interface IQuickItemEx<T> extends vscode.QuickPickItem {
     value: T;
@@ -97,6 +98,7 @@ export const defaultProblem: IProblem = {
 
 export enum Category {
     All = "All",
+    Hot100 = "Hot100",
     Difficulty = "Difficulty",
     Tag = "Tag",
     Company = "Company",
@@ -125,7 +127,7 @@ export enum SortingStrategy {
 export const PREMIUM_URL_CN = "https://leetcode.cn/premium-payment/?source=vscode";
 export const PREMIUM_URL_GLOBAL = "https://leetcode.com/subscribe/?ref=lp_pl&source=vscode";
 
-const protocol = vscode.env.appName.includes('Insiders') ? "vscode-insiders" : "vscode"
+const protocol = vscode.env.uriScheme || (vscode.env.appName.includes('Insiders') ? "vscode-insiders" : "vscode");
 
 export const urls = {
     // base urls
@@ -133,7 +135,7 @@ export const urls = {
     graphql: "https://leetcode.com/graphql",
     userGraphql: "https://leetcode.com/graphql",
     login: "https://leetcode.com/accounts/login/",
-    authLoginUrl: `https://leetcode.com/authorize-login/${protocol}/?path=leetcode.vscode-leetcode`,
+    authLoginUrl: buildAuthLoginUrl("https://leetcode.com", protocol),
 };
 
 export const urlsCn = {
@@ -142,7 +144,7 @@ export const urlsCn = {
     graphql: "https://leetcode.cn/graphql",
     userGraphql: "https://leetcode.cn/graphql/",
     login: "https://leetcode.cn/accounts/login/",
-    authLoginUrl: `https://leetcode.cn/authorize-login/${protocol}/?path=leetcode.vscode-leetcode`,
+    authLoginUrl: buildAuthLoginUrl("https://leetcode.cn", protocol),
 };
 
 export const getUrl = (key: string) => {

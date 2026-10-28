@@ -14,12 +14,19 @@ const graphqlStr = `
     }
 `;
 
-export const queryUserData = async (): Promise<UserDataType> => {
+export const queryUserData = async (cookie?: string): Promise<UserDataType> => {
     return LcAxios(getUrl("userGraphql"), {
         method: "POST",
         data: {
             query: graphqlStr,
             variables: {},
         },
-    }).then((res) => res.data.data.userStatus);
+    }, cookie).then((res) => {
+        const data = res.data?.data?.userStatus;
+        if (res.data?.errors?.length || !data || typeof data.isSignedIn !== "boolean" ||
+            (data.isSignedIn && !data.username)) {
+            throw new Error("力扣未返回有效的登录状态，请稍后重试。");
+        }
+        return data;
+    });
 };

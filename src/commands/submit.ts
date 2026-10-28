@@ -5,27 +5,29 @@ import * as vscode from "vscode";
 import { leetCodeTreeDataProvider } from "../explorer/LeetCodeTreeDataProvider";
 import { leetCodeExecutor } from "../leetCodeExecutor";
 import { leetCodeManager } from "../leetCodeManager";
-import { DialogType, promptForOpenOutputChannel, promptForSignIn } from "../utils/uiUtils";
-import { getActiveFilePath } from "../utils/workspaceUtils";
+import { promptForSignIn } from "../utils/uiUtils";
+import { IJavaSolutionTarget } from "../utils/javaSolutionUtils";
+import { IPreparedSolutionFile, prepareSolutionFile } from "../utils/solutionFileUtils";
+import { handleCommandError } from "../utils/commandErrorUtils";
 import { leetCodeSubmissionProvider } from "../webview/leetCodeSubmissionProvider";
 
-export async function submitSolution(uri?: vscode.Uri): Promise<void> {
+export async function submitSolution(uri?: vscode.Uri, target?: IJavaSolutionTarget): Promise<void> {
     if (!leetCodeManager.getUser()) {
         promptForSignIn();
         return;
     }
 
-    const filePath: string | undefined = await getActiveFilePath(uri);
-    if (!filePath) {
-        return;
-    }
-
+    let prepared: IPreparedSolutionFile | undefined;
     try {
-        const result: string = await leetCodeExecutor.submitSolution(filePath);
+        prepared = await prepareSolutionFile(uri, target);
+        if (!prepared) return;
+        const result: string = await leetCodeExecutor.submitSolution(prepared.filePath);
         leetCodeSubmissionProvider.show(result);
     } catch (error) {
-        await promptForOpenOutputChannel("提交失败：请打开输出面板查看详情。", DialogType.error);
+        await handleCommandError(error, "提交失败");
         return;
+    } finally {
+        if (prepared) await prepared.dispose();
     }
 
     leetCodeTreeDataProvider.refresh();

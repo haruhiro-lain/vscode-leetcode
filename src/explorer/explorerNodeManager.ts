@@ -8,6 +8,7 @@ import { getSortingStrategy } from "../commands/plugin";
 import { Category, defaultProblem, ProblemState, SortingStrategy } from "../shared";
 import { shouldHideSolvedProblem } from "../utils/settingUtils";
 import { LeetCodeNode } from "./LeetCodeNode";
+import { hot100ProblemIds } from "../data/hot100";
 
 class ExplorerNodeManager implements Disposable {
     private explorerNodeMap: Map<string, LeetCodeNode> = new Map<string, LeetCodeNode>();
@@ -38,6 +39,10 @@ class ExplorerNodeManager implements Disposable {
                 name: Category.All,
             }), false),
             new LeetCodeNode(Object.assign({}, defaultProblem, {
+                id: Category.Hot100,
+                name: Category.Hot100,
+            }), false),
+            new LeetCodeNode(Object.assign({}, defaultProblem, {
                 id: Category.Difficulty,
                 name: Category.Difficulty,
             }), false),
@@ -60,6 +65,15 @@ class ExplorerNodeManager implements Disposable {
         return this.applySortingStrategy(
             Array.from(this.explorerNodeMap.values()),
         );
+    }
+
+    public getHot100Nodes(): LeetCodeNode[] {
+        const nodes: LeetCodeNode[] = [];
+        for (const id of hot100ProblemIds) {
+            const node = this.explorerNodeMap.get(id);
+            if (node) nodes.push(node);
+        }
+        return this.applySortingStrategy(nodes);
     }
 
     public getAllDifficultyNodes(): LeetCodeNode[] {

@@ -7,21 +7,26 @@ import { leetCodeExecutor } from "../leetCodeExecutor";
 import { leetCodeManager } from "../leetCodeManager";
 import { IQuickItemEx, UserStatus } from "../shared";
 import { isWindows, usingCmd } from "../utils/osUtils";
-import { DialogType, promptForOpenOutputChannel, showFileSelectDialog } from "../utils/uiUtils";
-import { getActiveFilePath } from "../utils/workspaceUtils";
+import { promptForSignIn, showFileSelectDialog } from "../utils/uiUtils";
+import { IJavaSolutionTarget } from "../utils/javaSolutionUtils";
+import { IPreparedSolutionFile, prepareSolutionFile } from "../utils/solutionFileUtils";
+import { handleCommandError } from "../utils/commandErrorUtils";
 import * as wsl from "../utils/wslUtils";
 import { leetCodeSubmissionProvider } from "../webview/leetCodeSubmissionProvider";
 
-export async function testSolution(uri?: vscode.Uri): Promise<void> {
+export async function testSolution(uri?: vscode.Uri, target?: IJavaSolutionTarget): Promise<void> {
+    let prepared: IPreparedSolutionFile | undefined;
     try {
         if (leetCodeManager.getStatus() === UserStatus.SignedOut) {
+            await promptForSignIn();
             return;
         }
 
-        const filePath: string | undefined = await getActiveFilePath(uri);
-        if (!filePath) {
+        prepared = await prepareSolutionFile(uri, target);
+        if (!prepared) {
             return;
         }
+        const filePath: string = prepared.filePath;
         const picks: Array<IQuickItemEx<string>> = [];
         picks.push(
             {
@@ -83,7 +88,9 @@ export async function testSolution(uri?: vscode.Uri): Promise<void> {
         }
         leetCodeSubmissionProvider.show(result);
     } catch (error) {
-        await promptForOpenOutputChannel("测试失败：请打开输出面板查看详情。", DialogType.error);
+        await handleCommandError(error, "测试失败");
+    } finally {
+        if (prepared) await prepared.dispose();
     }
 }
 

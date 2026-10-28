@@ -11,16 +11,14 @@ import { LeetCodeNode } from "../explorer/LeetCodeNode";
 import { leetCodeChannel } from "../leetCodeChannel";
 import { leetCodeExecutor } from "../leetCodeExecutor";
 import { leetCodeManager } from "../leetCodeManager";
-import { Endpoint, IProblem, IQuickItemEx, languages, PREMIUM_URL_CN, PREMIUM_URL_GLOBAL, ProblemState } from "../shared";
+import { Endpoint, IProblem, IQuickItemEx, languages, langExt, PREMIUM_URL_CN, PREMIUM_URL_GLOBAL, ProblemState } from "../shared";
 import { genFileExt, genFileName, getNodeIdFromFile } from "../utils/problemUtils";
 import * as settingUtils from "../utils/settingUtils";
 import { IDescriptionConfiguration } from "../utils/settingUtils";
 import {
     DialogOptions,
-    DialogType,
     openSettingsEditor,
     openUrl,
-    promptForOpenOutputChannel,
     promptForSignIn,
     promptHintMessage,
 } from "../utils/uiUtils";
@@ -31,6 +29,9 @@ import { leetCodeSolutionProvider } from "../webview/leetCodeSolutionProvider";
 import * as list from "./list";
 import { getLeetCodeEndpoint } from "./plugin";
 import { globalState } from "../globalState";
+import { javaIdentifier } from "../utils/javaTemplateUtils";
+import { handleCommandError } from "../utils/commandErrorUtils";
+import { findExistingProblemFiles } from "../utils/existingProblemUtils";
 
 export async function previewProblem(input: IProblem | vscode.Uri, isSideMode: boolean = false): Promise<void> {
     let node: IProblem;
@@ -60,9 +61,13 @@ export async function previewProblem(input: IProblem | vscode.Uri, isSideMode: b
         }
     }
 
-    const needTranslation: boolean = settingUtils.shouldUseEndpointTranslation();
-    const descString: string = await leetCodeExecutor.getDescription(node.id, needTranslation);
-    leetCodePreviewProvider.show(descString, node, isSideMode);
+    try {
+        const needTranslation: boolean = settingUtils.shouldUseEndpointTranslation();
+        const descString: string = await leetCodeExecutor.getDescription(node.id, needTranslation);
+        leetCodePreviewProvider.show(descString, node, isSideMode);
+    } catch (error) {
+        await handleCommandError(error, "获取题目描述失败");
+    }
 }
 
 export async function pickOne(): Promise<void> {
@@ -120,8 +125,7 @@ export async function showSolution(input: LeetCodeNode | vscode.Uri): Promise<vo
         const solution: string = await leetCodeExecutor.showSolution(problemInput, language, needTranslation);
         leetCodeSolutionProvider.show(unescapeJS(solution));
     } catch (error) {
-        leetCodeChannel.appendLine(error.toString());
-        await promptForOpenOutputChannel("获取高赞题解失败，请打开输出面板查看详情。", DialogType.error);
+        await handleCommandError(error, "获取高赞题解失败");
     }
 }
 
@@ -158,16 +162,31 @@ async function fetchProblemLanguage(): Promise<string | undefined> {
 
 async function showProblemInternal(node: IProblem): Promise<void> {
     try {
-        const language: string | undefined = await fetchProblemLanguage();
-        if (!language) {
-            return;
-        }
-
         const leetCodeConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration("leetcode");
         const workspaceFolder: string = await selectWorkspaceFolder();
         if (!workspaceFolder) {
             return;
         }
+        const searchRoot = wsl.useWsl() ? await wsl.toWinPath(workspaceFolder) : workspaceFolder;
+        const existing = await findExistingProblemFiles(searchRoot, node.id, node.name, Array.from(langExt.values()));
+        if (existing.length) {
+            const active = vscode.window.activeTextEditor?.document.uri.fsPath;
+            let file = existing.find((candidate) => active && (process.platform === "win32"
+                ? candidate.toLowerCase() === path.normalize(active).toLowerCase() : candidate === active)) || (existing.length === 1 ? existing[0] : undefined);
+            if (!file) {
+                const choice = await vscode.window.showQuickPick(existing.map((candidate) => ({
+                    label: path.basename(candidate), description: path.relative(searchRoot, path.dirname(candidate)), file: candidate,
+                })), { placeHolder: `找到 ${existing.length} 份题号 ${node.id} 的题解，请选择要打开的文件`, matchOnDescription: true });
+                file = choice?.file;
+            }
+            if (file) {
+                await vscode.window.showTextDocument(vscode.Uri.file(file), { preview: false, viewColumn: vscode.ViewColumn.One });
+            }
+            return;
+        }
+
+        const language: string | undefined = await fetchProblemLanguage();
+        if (!language) return;
 
         const fileFolder: string = leetCodeConfig
             .get<string>(`filePath.${language}.folder`, leetCodeConfig.get<string>(`filePath.default.folder`, ""))
@@ -210,7 +229,7 @@ async function showProblemInternal(node: IProblem): Promise<void> {
 
         await Promise.all(promises);
     } catch (error) {
-        await promptForOpenOutputChannel(`${error} 请打开输出面板查看详情。`, DialogType.error);
+        await handleCommandError(error, "打开题目失败");
     }
 }
 
@@ -280,9 +299,9 @@ async function resolveRelativePath(relativePath: string, node: IProblem, selecte
             case "difficulty":
                 return node.difficulty.toLocaleLowerCase();
             case "tag":
-                return tag;
+                return selectedLanguage === "java" && tag ? javaIdentifier(tag) : tag;
             case "company":
-                return company;
+                return selectedLanguage === "java" && company ? javaIdentifier(company) : company;
             default:
                 const errorMsg: string = `不支持路径占位符 ${placeholder}。`;
                 leetCodeChannel.appendLine(errorMsg);

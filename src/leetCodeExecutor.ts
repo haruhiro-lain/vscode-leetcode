@@ -3,7 +3,6 @@
 
 import * as cp from "child_process";
 import * as fse from "fs-extra";
-import * as os from "os";
 import * as path from "path";
 import * as requireFromString from "require-from-string";
 import { ExtensionContext } from "vscode";
@@ -13,6 +12,8 @@ import { executeCommand, executeCommandWithProgress } from "./utils/cpUtils";
 import { DialogOptions, openUrl } from "./utils/uiUtils";
 import * as wsl from "./utils/wslUtils";
 import { toWslPath, useWsl } from "./utils/wslUtils";
+import { ensureExerciseFile } from "./utils/exerciseFileUtils";
+import { isAuthenticationError } from "./utils/commandResultUtils";
 
 class LeetCodeExecutor implements Disposable {
     private leetCodeRootPath: string;
@@ -37,10 +38,6 @@ class LeetCodeExecutor implements Disposable {
     }
 
     public async meetRequirements(context: ExtensionContext): Promise<boolean> {
-        const hasInited: boolean | undefined = context.globalState.get(leetcodeHasInited);
-        if (!hasInited) {
-            await this.removeOldCache();
-        }
         if (this.nodeExecutable !== "node") {
             if (!await fse.pathExists(this.nodeExecutable)) {
                 throw new Error(`找不到 Node.js 可执行文件：${this.nodeExecutable}`);
@@ -66,13 +63,11 @@ class LeetCodeExecutor implements Disposable {
         for (const plugin of supportedPlugins) {
             try { // Check plugin
                 await this.executeCommandEx(this.nodeExecutable, [await this.getLeetCodeBinaryPath(), "plugin", "-e", plugin]);
-            } catch (error) { // Remove old cache that may cause the error download plugin and activate
-                await this.removeOldCache();
+            } catch (error) { // Reinstall the plugin without deleting shared CLI credentials.
                 await this.executeCommandEx(this.nodeExecutable, [await this.getLeetCodeBinaryPath(), "plugin", "-i", plugin]);
             }
         }
-        // Set the global state HasInited true to skip delete old cache after init
-        context.globalState.update(leetcodeHasInited, true);
+        await context.globalState.update(leetcodeHasInited, true);
         return true;
     }
 
@@ -108,11 +103,8 @@ class LeetCodeExecutor implements Disposable {
             cmd.push("-T"); // use -T to force English version
         }
 
-        if (!await fse.pathExists(filePath)) {
-            await fse.createFile(filePath);
-            const codeTemplate: string = await this.executeCommandWithProgressEx("正在获取题目与代码模板…", this.nodeExecutable, cmd);
-            await fse.writeFile(filePath, codeTemplate);
-        }
+        await ensureExerciseFile(filePath, language, problemNode.id, () =>
+            this.executeCommandWithProgressEx("正在获取题目与代码模板…", this.nodeExecutable, cmd));
     }
 
     /**
@@ -166,6 +158,7 @@ class LeetCodeExecutor implements Disposable {
         try {
             return await this.executeCommandWithProgressEx("正在提交至 LeetCode，等待判题结果…", this.nodeExecutable, [await this.getLeetCodeBinaryPath(), "submit", `"${filePath}"`]);
         } catch (error) {
+            if (isAuthenticationError(error)) throw error;
             if (error.result) {
                 return error.result;
             }
@@ -234,13 +227,6 @@ class LeetCodeExecutor implements Disposable {
             return await executeCommandWithProgress(message, "wsl", [command].concat(args), options);
         }
         return await executeCommandWithProgress(message, command, args, options);
-    }
-
-    private async removeOldCache(): Promise<void> {
-        const oldPath: string = path.join(os.homedir(), ".lc");
-        if (await fse.pathExists(oldPath)) {
-            await fse.remove(oldPath);
-        }
     }
 
 }

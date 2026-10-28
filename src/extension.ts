@@ -26,9 +26,18 @@ import { leetCodeSubmissionProvider } from "./webview/leetCodeSubmissionProvider
 import { markdownEngine } from "./webview/markdownEngine";
 import TrackData from "./utils/trackingUtils";
 import { globalState } from "./globalState";
+import { IJavaSolutionTarget } from "./utils/javaSolutionUtils";
+import { migrateLegacyState } from "./utils/legacyStateMigration";
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     try {
+        globalState.initialize(context);
+        try {
+            const migrated: number = await migrateLegacyState(context, vscode.workspace.getConfiguration("leetcode").get<string>("nodePath", "node"));
+            if (migrated) leetCodeChannel.appendLine("已迁移旧插件登录及初始化状态。");
+        } catch (_) {
+            vscode.window.showWarningMessage("旧插件登录状态迁移未完成，请重新运行安装脚本；也可直接登录 LeetCode-CN。");
+        }
         if (!(await leetCodeExecutor.meetRequirements(context))) {
             throw new Error("当前环境不满足插件运行要求。");
         }
@@ -39,9 +48,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         });
 
         leetCodeTreeDataProvider.initialize(context);
-        globalState.initialize(context);
 
         context.subscriptions.push(
+            vscode.window.registerUriHandler({ handleUri: leetCodeManager.handleUriSignIn }),
             leetCodeStatusBarController,
             leetCodeChannel,
             leetCodePreviewProvider,
@@ -74,7 +83,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             vscode.commands.registerCommand("leetcode.searchProblem", () => show.searchProblem()),
             vscode.commands.registerCommand("leetcode.showSolution", (input: LeetCodeNode | vscode.Uri) => show.showSolution(input)),
             vscode.commands.registerCommand("leetcode.refreshExplorer", () => leetCodeTreeDataProvider.refresh()),
-            vscode.commands.registerCommand("leetcode.testSolution", (uri?: vscode.Uri) => {
+            vscode.commands.registerCommand("leetcode.testSolution", (uri?: vscode.Uri, target?: IJavaSolutionTarget) => {
                 TrackData.report({
                     event_key: `vscode_runCode`,
                     type: "click",
@@ -82,9 +91,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                         path: uri?.path,
                     }),
                 });
-                return test.testSolution(uri);
+                return test.testSolution(uri, target);
             }),
-            vscode.commands.registerCommand("leetcode.submitSolution", (uri?: vscode.Uri) => {
+            vscode.commands.registerCommand("leetcode.submitSolution", (uri?: vscode.Uri, target?: IJavaSolutionTarget) => {
                 TrackData.report({
                     event_key: `vscode_submit`,
                     type: "click",
@@ -92,7 +101,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                         path: uri?.path,
                     }),
                 });
-                return submit.submitSolution(uri);
+                return submit.submitSolution(uri, target);
             }),
             vscode.commands.registerCommand("leetcode.switchDefaultLanguage", () => switchDefaultLanguage()),
             vscode.commands.registerCommand("leetcode.addFavorite", (node: LeetCodeNode) => star.addFavorite(node)),
@@ -102,7 +111,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
         await leetCodeExecutor.switchEndpoint(plugin.getLeetCodeEndpoint());
         await leetCodeManager.getLoginStatus();
-        vscode.window.registerUriHandler({ handleUri: leetCodeManager.handleUriSignIn });
     } catch (error) {
         leetCodeChannel.appendLine(error.toString());
         promptForOpenOutputChannel("插件初始化失败，请打开输出面板查看详情。", DialogType.error);

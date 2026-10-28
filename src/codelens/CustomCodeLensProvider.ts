@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 import { explorerNodeManager } from "../explorer/explorerNodeManager";
 import { LeetCodeNode } from "../explorer/LeetCodeNode";
 import { getEditorShortcuts } from "../utils/settingUtils";
+import { findJavaSolutions } from "../utils/javaSolutionUtils";
 
 export class CustomCodeLensProvider implements vscode.CodeLensProvider {
 
@@ -47,7 +48,35 @@ export class CustomCodeLensProvider implements vscode.CodeLensProvider {
         const range: vscode.Range = new vscode.Range(codeLensLine, 0, codeLensLine, 0);
         const codeLens: vscode.CodeLens[] = [];
 
-        if (shortcuts.indexOf("submit") >= 0) {
+        const solutions = document.languageId === "java" ? findJavaSolutions(content) : [];
+        if (shortcuts.indexOf("description") >= 0) {
+            const descriptionLine: number = solutions.length > 0 ? Math.max(0, document.positionAt(solutions[0].start).line - 1) : 0;
+            codeLens.push(new vscode.CodeLens(new vscode.Range(descriptionLine, 0, descriptionLine, 0), {
+                title: "题目描述",
+                command: "leetcode.previewProblem",
+                arguments: [document.uri],
+            }));
+        }
+        for (const solution of solutions) {
+            const position = document.positionAt(solution.start);
+            const classRange = new vscode.Range(position.line, 0, position.line, 0);
+            if (shortcuts.indexOf("submit") >= 0) {
+                codeLens.push(new vscode.CodeLens(classRange, {
+                    title: "提交代码",
+                    command: "leetcode.submitSolution",
+                    arguments: [document.uri, solution],
+                }));
+            }
+            if (shortcuts.indexOf("test") >= 0) {
+                codeLens.push(new vscode.CodeLens(classRange, {
+                    title: "运行测试",
+                    command: "leetcode.testSolution",
+                    arguments: [document.uri, solution],
+                }));
+            }
+        }
+
+        if (solutions.length === 0 && shortcuts.indexOf("submit") >= 0) {
             codeLens.push(new vscode.CodeLens(range, {
                 title: "提交代码",
                 command: "leetcode.submitSolution",
@@ -55,7 +84,7 @@ export class CustomCodeLensProvider implements vscode.CodeLensProvider {
             }));
         }
 
-        if (shortcuts.indexOf("test") >= 0) {
+        if (solutions.length === 0 && shortcuts.indexOf("test") >= 0) {
             codeLens.push(new vscode.CodeLens(range, {
                 title: "运行测试",
                 command: "leetcode.testSolution",
@@ -75,14 +104,6 @@ export class CustomCodeLensProvider implements vscode.CodeLensProvider {
             codeLens.push(new vscode.CodeLens(range, {
                 title: "题解",
                 command: "leetcode.showSolution",
-                arguments: [document.uri],
-            }));
-        }
-
-        if (shortcuts.indexOf("description") >= 0) {
-            codeLens.push(new vscode.CodeLens(range, {
-                title: "题目描述",
-                command: "leetcode.previewProblem",
                 arguments: [document.uri],
             }));
         }

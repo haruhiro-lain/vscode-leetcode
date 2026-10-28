@@ -1,10 +1,10 @@
 {
-    "name": "vscode-leetcode",
+    "name": "leetcode-cn",
     "displayName": "LeetCode-CN",
     "description": "在 VS Code 中浏览力扣题目、编写题解、运行测试、提交代码并查看中文判题结果。",
-    "version": "0.18.9",
-    "author": "LeetCode",
-    "publisher": "LeetCode",
+    "version": "0.19.4",
+    "author": "haruhiro-lain",
+    "publisher": "haruhiro-lain",
     "license": "MIT",
     "icon": "resources/LeetCode.png",
     "engines": {
@@ -26,6 +26,7 @@
     ],
     "preview": true,
     "activationEvents": [
+        "onUri",
         "onStartupFinished",
         "onCommand:leetcode.toggleLeetCodeCn",
         "onCommand:leetcode.signin",
@@ -393,6 +394,20 @@
                             "力扣中国站（leetcode.cn）"
                         ]
                     },
+                    "leetcode.cnConnectionMode": {
+                        "type": "string",
+                        "default": "direct",
+                        "scope": "window",
+                        "enum": [
+                            "direct",
+                            "proxy"
+                        ],
+                        "enumDescriptions": [
+                            "中国站直连，避免代理出口触发网站验证；国际站继续使用原代理设置。",
+                            "跟随 VS Code 的 http.proxy 和环境代理设置。"
+                        ],
+                        "description": "力扣中国站的连接方式，同时用于登录校验和 CLI 题目、测试、提交请求。"
+                    },
                     "leetcode.useEndpointTranslation": {
                         "type": "boolean",
                         "default": true,
@@ -729,7 +744,7 @@
         "lint": "tslint --project tsconfig.json -e src/*.d.ts -t verbose",
         "build": "vsce package",
         "vs-publish": "vsce publish",
-        "test": "npm run compile && node --test test/workspace-path.test.js"
+        "test": "npm run compile && node --test test/*.test.js"
     },
     "devDependencies": {
         "@types/fs-extra": "^9.0.11",

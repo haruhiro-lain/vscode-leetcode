@@ -36,7 +36,7 @@ export class LeetCodeTreeDataProvider implements vscode.TreeDataProvider<LeetCod
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 command: {
                     command: "leetcode.signin",
-                    title: "登录 LeetCode",
+                    title: "登录 LeetCode-CN",
                 },
             };
         }
@@ -65,7 +65,7 @@ export class LeetCodeTreeDataProvider implements vscode.TreeDataProvider<LeetCod
                 new LeetCodeNode(
                     Object.assign({}, defaultProblem, {
                         id: "notSignIn",
-                        name: "登录 LeetCode",
+                        name: "登录 LeetCode-CN",
                     }),
                     false
                 ),
@@ -78,6 +78,8 @@ export class LeetCodeTreeDataProvider implements vscode.TreeDataProvider<LeetCod
             switch (element.id) {
                 case Category.All:
                     return explorerNodeManager.getAllNodes();
+                case Category.Hot100:
+                    return explorerNodeManager.getHot100Nodes();
                 case Category.Favorite:
                     return explorerNodeManager.getFavoriteNodes();
                 case Category.Difficulty:
@@ -125,11 +127,12 @@ export class LeetCodeTreeDataProvider implements vscode.TreeDataProvider<LeetCod
 
     private getSubCategoryTooltip(element: LeetCodeNode): string {
         // return '' unless it is a sub-category node
-        if (element.isProblem || element.id === "ROOT" || element.id in Category) {
+        if (element.isProblem || element.id === "ROOT" || (element.id in Category && element.id !== Category.Hot100)) {
             return "";
         }
 
-        const childernNodes: LeetCodeNode[] = explorerNodeManager.getChildrenNodesById(element.id);
+        const childernNodes: LeetCodeNode[] = element.id === Category.Hot100
+            ? explorerNodeManager.getHot100Nodes() : explorerNodeManager.getChildrenNodesById(element.id);
 
         let acceptedNum: number = 0;
         let failedNum: number = 0;

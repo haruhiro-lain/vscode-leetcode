@@ -6,6 +6,8 @@ import { leetCodeManager } from "../leetCodeManager";
 import { IProblem, ProblemState, UserStatus } from "../shared";
 import * as settingUtils from "../utils/settingUtils";
 import { DialogType, promptForOpenOutputChannel } from "../utils/uiUtils";
+import { isAuthenticationError } from "../utils/commandResultUtils";
+import { handleCommandError } from "../utils/commandErrorUtils";
 
 export async function listProblems(): Promise<IProblem[]> {
     try {
@@ -38,6 +40,10 @@ export async function listProblems(): Promise<IProblem[]> {
         }
         return problems.reverse();
     } catch (error) {
+        if (isAuthenticationError(error)) {
+            await handleCommandError(error, "获取题目列表失败");
+            return [];
+        }
         await promptForOpenOutputChannel("获取题目列表失败，请打开输出面板查看详情。", DialogType.error);
         return [];
     }

@@ -1,6 +1,6 @@
 # LeetCode-CN
 
-个人定制的力扣中文插件，基于 [LeetCode-OpenSource/vscode-leetcode](https://github.com/LeetCode-OpenSource/vscode-leetcode)，保留原 MIT 许可。定制分支为 `feat/personalization`，当前版本为 **0.18.8**。安装与共享设置见 [定制说明](PERSONALIZATION.md)；算法工作空间使用 `haruhiroLain_work` 的 `main` 分支。
+个人定制的力扣中文插件，独立扩展标识为 **`haruhiro-lain.leetcode-cn`**，基于 [LeetCode-OpenSource/vscode-leetcode](https://github.com/LeetCode-OpenSource/vscode-leetcode)，保留原 MIT 许可。定制分支为 `feat/personalization`，当前版本为 **0.19.4**。安装与旧版登录迁移见 [定制说明](PERSONALIZATION.md)；算法工作空间使用 `haruhiroLain_work` 的 `main` 分支。
 
 > Solve LeetCode problems in VS Code
 
@@ -37,7 +37,7 @@ Thanks for [@yihong0618](https://github.com/yihong0618) provided a workaround wh
 ## Requirements
 
 - [VS Code 1.30.1+](https://code.visualstudio.com/)
-- [Node.js 10+](https://nodejs.org)
+- [Node.js 22.13+](https://nodejs.org)
   > NOTE: Please make sure that `Node` is in your `PATH` environment variable. You can also use the setting `leetcode.nodePath` to specify the location of your `Node.js` executable.
 
 ## Quick Start

@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import * as vscode from "vscode";
+import { advanceSessionRevision } from "./utils/sessionRevision";
 
 const CookieKey = "leetcode-cookie";
 const UserStatusKey = "leetcode-user-status";
@@ -17,8 +18,8 @@ export type UserDataType = {
 class GlobalState {
     private context: vscode.ExtensionContext;
     private _state: vscode.Memento;
-    private _cookie: string;
-    private _userStatus: UserDataType;
+    private _cookie: string | undefined;
+    private _userStatus: UserDataType | undefined;
 
     public initialize(context: vscode.ExtensionContext): void {
         this.context = context;
@@ -26,11 +27,12 @@ class GlobalState {
     }
 
     public setCookie(cookie: string): any {
+        advanceSessionRevision();
         this._cookie = cookie;
         return this._state.update(CookieKey, this._cookie);
     }
     public getCookie(): string | undefined {
-        return this._cookie ?? this._state.get(CookieKey);
+        return this._cookie ?? this._state?.get(CookieKey);
     }
 
     public setUserStatus(userStatus: UserDataType): any {
@@ -39,14 +41,19 @@ class GlobalState {
     }
 
     public getUserStatus(): UserDataType | undefined {
-        return this._userStatus ?? this._state.get(UserStatusKey);
+        return this._userStatus ?? this._state?.get(UserStatusKey);
     }
 
     public removeCookie(): void {
+        advanceSessionRevision();
+        this._cookie = undefined;
         this._state.update(CookieKey, undefined);
     }
 
     public removeAll(): void {
+        advanceSessionRevision();
+        this._cookie = undefined;
+        this._userStatus = undefined;
         this._state.update(CookieKey, undefined);
         this._state.update(UserStatusKey, undefined);
     }
