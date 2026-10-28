@@ -3,6 +3,12 @@ All notable changes to the "leetcode" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.18.8] LeetCode-CN
+### Changed
+- 插件显示名称、命令分类和输出通道统一为 LeetCode-CN。
+- 默认编程语言支持仓库工作区设置，另一台电脑拉取后可继续使用 Java。
+- 扩展标识及设置键保持兼容，可直接覆盖安装旧定制版。
+
 ## [0.18.7] 中文定制版
 ### Fixed
 - 题解目录、文件模板与代码快捷入口支持工作区设置，随仓库共享。

@@ -1,8 +1,8 @@
 {
     "name": "vscode-leetcode",
-    "displayName": "LeetCode（中文定制版）",
+    "displayName": "LeetCode-CN",
     "description": "在 VS Code 中浏览力扣题目、编写题解、运行测试、提交代码并查看中文判题结果。",
-    "version": "0.18.7",
+    "version": "0.18.8",
     "author": "LeetCode",
     "publisher": "LeetCode",
     "license": "MIT",
@@ -12,9 +12,9 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/LeetCode-OpenSource/vscode-leetcode"
+        "url": "https://github.com/haruhiro-lain/vscode-leetcode"
     },
-    "homepage": "https://github.com/LeetCode-OpenSource/vscode-leetcode/blob/master/README.md",
+    "homepage": "https://github.com/haruhiro-lain/vscode-leetcode/blob/feat/personalization/PERSONALIZATION.md",
     "categories": [
         "Other",
         "Snippets"
@@ -47,76 +47,76 @@
             {
                 "command": "leetcode.deleteCache",
                 "title": "清理缓存",
-                "category": "LeetCode"
+                "category": "LeetCode-CN"
             },
             {
                 "command": "leetcode.toggleLeetCodeCn",
                 "title": "切换站点",
-                "category": "LeetCode",
+                "category": "LeetCode-CN",
                 "icon": "$(globe)"
             },
             {
                 "command": "leetcode.signin",
                 "title": "登录",
-                "category": "LeetCode",
+                "category": "LeetCode-CN",
                 "icon": "$(sign-in)"
             },
             {
                 "command": "leetcode.signout",
                 "title": "退出登录",
-                "category": "LeetCode"
+                "category": "LeetCode-CN"
             },
             {
                 "command": "leetcode.manageSessions",
                 "title": "管理刷题会话",
-                "category": "LeetCode"
+                "category": "LeetCode-CN"
             },
             {
                 "command": "leetcode.refreshExplorer",
                 "title": "刷新题目",
-                "category": "LeetCode",
+                "category": "LeetCode-CN",
                 "icon": "$(refresh)"
             },
             {
                 "command": "leetcode.pickOne",
                 "title": "随机一题",
-                "category": "LeetCode"
+                "category": "LeetCode-CN"
             },
             {
                 "command": "leetcode.showProblem",
                 "title": "开始做题",
-                "category": "LeetCode"
+                "category": "LeetCode-CN"
             },
             {
                 "command": "leetcode.previewProblem",
                 "title": "预览题目",
-                "category": "LeetCode"
+                "category": "LeetCode-CN"
             },
             {
                 "command": "leetcode.searchProblem",
                 "title": "搜索题目",
-                "category": "LeetCode",
+                "category": "LeetCode-CN",
                 "icon": "$(search)"
             },
             {
                 "command": "leetcode.showSolution",
                 "title": "查看高赞题解",
-                "category": "LeetCode"
+                "category": "LeetCode-CN"
             },
             {
                 "command": "leetcode.testSolution",
                 "title": "运行测试",
-                "category": "LeetCode"
+                "category": "LeetCode-CN"
             },
             {
                 "command": "leetcode.submitSolution",
                 "title": "提交代码",
-                "category": "LeetCode"
+                "category": "LeetCode-CN"
             },
             {
                 "command": "leetcode.addFavorite",
                 "title": "收藏题目",
-                "category": "LeetCode",
+                "category": "LeetCode-CN",
                 "icon": {
                     "light": "resources/light/like.png",
                     "dark": "resources/dark/like.png"
@@ -125,7 +125,7 @@
             {
                 "command": "leetcode.removeFavorite",
                 "title": "取消收藏",
-                "category": "LeetCode",
+                "category": "LeetCode-CN",
                 "icon": {
                     "light": "resources/light/dislike.png",
                     "dark": "resources/dark/dislike.png"
@@ -134,12 +134,12 @@
             {
                 "command": "leetcode.switchDefaultLanguage",
                 "title": "切换默认编程语言",
-                "category": "LeetCode"
+                "category": "LeetCode-CN"
             },
             {
                 "command": "leetcode.problems.sort",
                 "title": "题目排序",
-                "category": "LeetCode",
+                "category": "LeetCode-CN",
                 "icon": "$(sort-precedence)"
             }
         ],
@@ -147,7 +147,7 @@
             "activitybar": [
                 {
                     "id": "leetcode",
-                    "title": "LeetCode",
+                    "title": "LeetCode-CN",
                     "icon": "resources/LeetCode.svg"
                 }
             ]
@@ -286,12 +286,12 @@
         "submenus": [
             {
                 "id": "leetcode.editorAction",
-                "label": "LeetCode"
+                "label": "LeetCode-CN"
             }
         ],
         "configuration": [
             {
-                "title": "LeetCode",
+                "title": "LeetCode-CN",
                 "properties": {
                     "leetcode.hideSolved": {
                         "type": "boolean",
@@ -320,7 +320,7 @@
                             "swift",
                             "typescript"
                         ],
-                        "scope": "application",
+                        "scope": "window",
                         "description": "刷题时默认使用的编程语言。"
                     },
                     "leetcode.showDescription": {

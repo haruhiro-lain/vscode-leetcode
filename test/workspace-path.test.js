@@ -6,7 +6,7 @@ const manifest = require('../package.json');
 
 test('path and description shortcut settings accept workspace overrides', () => {
     const properties = Object.assign({}, ...[].concat(manifest.contributes.configuration).map(c => c.properties));
-    for (const key of ['leetcode.workspaceFolder', 'leetcode.filePath', 'leetcode.editor.shortcuts']) {
+    for (const key of ['leetcode.workspaceFolder', 'leetcode.filePath', 'leetcode.editor.shortcuts', 'leetcode.defaultLanguage']) {
         assert.equal(properties[key].scope, 'window', key);
     }
 });
