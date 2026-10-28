@@ -8,6 +8,7 @@ import * as vscode from "vscode";
 import { IQuickItemEx } from "../shared";
 import { getWorkspaceConfiguration, getWorkspaceFolder } from "./settingUtils";
 import { showDirectorySelectDialog } from "./uiUtils";
+import { resolveConfiguredWorkspacePath } from "./workspacePathUtils";
 import * as wsl from "./wslUtils";
 
 export async function selectWorkspaceFolder(): Promise<string> {
@@ -19,6 +20,22 @@ export async function selectWorkspaceFolder(): Promise<string> {
             return workspaceFolderSetting;
         }
     }
+    let workspaceRoot: string | undefined;
+    if (workspaceFolderSetting.indexOf("${workspaceFolder}") >= 0 || !path.isAbsolute(workspaceFolderSetting)) {
+        const folders: readonly vscode.WorkspaceFolder[] = vscode.workspace.workspaceFolders || [];
+        if (folders.length === 1) {
+            workspaceRoot = folders[0].uri.fsPath;
+        } else if (folders.length > 1) {
+            const folder: vscode.WorkspaceFolder | undefined = await vscode.window.showWorkspaceFolderPick({
+                placeHolder: "请选择保存 LeetCode 题解的仓库",
+            });
+            if (!folder) {
+                return "";
+            }
+            workspaceRoot = folder.uri.fsPath;
+        }
+    }
+    workspaceFolderSetting = resolveConfiguredWorkspacePath(workspaceFolderSetting, workspaceRoot);
     let needAsk: boolean = true;
     await fse.ensureDir(workspaceFolderSetting);
     for (const folder of vscode.workspace.workspaceFolders || []) {

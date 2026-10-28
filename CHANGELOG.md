@@ -3,6 +3,11 @@ All notable changes to the "leetcode" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.18.7] 中文定制版
+### Fixed
+- 题解目录、文件模板与代码快捷入口支持工作区设置，随仓库共享。
+- 题解根目录支持相对路径和 `${workspaceFolder}`，在不同电脑上使用各自的仓库位置。
+
 ## [0.18.4]
 ### Added
 - change graphql path

@@ -2,7 +2,7 @@
     "name": "vscode-leetcode",
     "displayName": "LeetCode（中文定制版）",
     "description": "在 VS Code 中浏览力扣题目、编写题解、运行测试、提交代码并查看中文判题结果。",
-    "version": "0.18.4",
+    "version": "0.18.7",
     "author": "LeetCode",
     "publisher": "LeetCode",
     "license": "MIT",
@@ -400,13 +400,13 @@
                     },
                     "leetcode.workspaceFolder": {
                         "type": "string",
-                        "scope": "application",
-                        "description": "保存 LeetCode 题解文件的工作目录。",
+                        "scope": "window",
+                        "description": "保存 LeetCode 题解文件的工作目录。支持相对于当前仓库的路径和 ${workspaceFolder} 变量。",
                         "default": ""
                     },
                     "leetcode.filePath": {
                         "type": "object",
-                        "scope": "application",
+                        "scope": "window",
                         "description": "题解文件相对于工作目录的子目录和文件名模板。",
                         "properties": {
                             "default": {
@@ -657,7 +657,7 @@
                             "submit",
                             "test"
                         ],
-                        "scope": "application",
+                        "scope": "window",
                         "items": {
                             "type": "string",
                             "enum": [
@@ -727,7 +727,8 @@
         "watch": "tsc -watch -p ./",
         "lint": "tslint --project tsconfig.json -e src/*.d.ts -t verbose",
         "build": "vsce package",
-        "vs-publish": "vsce publish"
+        "vs-publish": "vsce publish",
+        "test": "npm run compile && node --test test/workspace-path.test.js"
     },
     "devDependencies": {
         "@types/fs-extra": "^9.0.11",

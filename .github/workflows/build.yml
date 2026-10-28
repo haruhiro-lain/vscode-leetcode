@@ -2,49 +2,24 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [master, feat/personalization]
   pull_request:
-    branches: [master]
+    branches: [master, feat/personalization]
 
 jobs:
-  linux:
-    name: Linux
-    runs-on: ubuntu-latest
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 14
-
-      - name: Install Node.js modules
-        run: npm install
-
-      - name: Lint
-        run: npm run lint
-
-      - name: VSCE Packge
-        run: npx vsce package
-
-  windows:
-    name: Windows
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v2
-        with:
-          node-version: 14
-
-      - name: Install Node.js modules
-        run: npm install
-
-      - name: Lint
-        run: npm run lint
-
-      - name: VSCE Packge
-        run: npx vsce package
+          node-version: 22
+          cache: npm
+      - run: npm ci --registry=https://registry.npmjs.org --no-audit --no-fund
+      - run: npm run lint
+      - run: npm test
+      - run: npm exec --yes --package=@vscode/vsce@4.0.0 -- vsce package
