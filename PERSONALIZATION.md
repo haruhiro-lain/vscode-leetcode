@@ -1,6 +1,6 @@
 # LeetCode-CN：安装与共享工作区设置
 
-当前版本 **0.22.2**，独立扩展标识为 **`haruhiro-lain.leetcode-cn`**，插件源码分支为 `feat/personalization`。VSIX 文件名为 `LeetCode-CN-0.22.2.vsix`。
+当前版本 **0.22.3**，独立扩展标识为 **`haruhiro-lain.leetcode-cn`**，插件源码分支为 `feat/personalization`。VSIX 文件名为 `LeetCode-CN-0.22.3.vsix`。
 
 侧边栏视图标题统一为 LeetCode-CN。顶部按钮从左到右为：搜索题目、随机一题、刷新题目、自定义题单、全部折叠。“切换站点”位于“视图和更多操作（…）”菜单；登录、退出及题目排序也在该菜单中，登录/退出入口继续随账号状态切换。随机一题使用音乐播放器常见的交叉箭头随机播放图标，适配浅色与深色主题；自定义题单使用带加号的文件图标。全部折叠沿用 VS Code 原生按钮。
 
@@ -40,6 +40,8 @@ Hot100 与代码随想录、华为 OD 一样由工作区题单 JSON 配置管理
 `sourceMode: "leetcode"` 只导入带 `@lc` 标记的 Java 力扣题解链接，忽略文末“相关题单”等 Markdown 导航；默认 `"links"` 同时支持本地 Markdown 题面和力扣 Java 题解。题单和关联 Java 文件一起随仓库同步，保存文档后自动更新模块及题目。分组来自本地文档，不会在展开列表时抓取原站更新。
 
 ## 自定义题单与本地 Markdown 题目
+
+OD 等本地题面的题号采用 HydroOJ 编号时，题面正文底部显示 **提交代码** 按钮，点击后在系统浏览器打开该题的 `/submit` 页面。题面中的“题目编号”或“在线练习”链接须与文件名的 `Pxxxxx` 编号一致；入口随当前题面更新。浏览器未登录 HydroOJ 时，由网站引导登录后返回对应提交页。
 
 点击题目列表顶部的 **自定义题单** 按钮，或运行 `LeetCode-CN: 自定义题单` 命令。默认打开工作区的 `.vscode/leetcode-study-plans.json`，文件不存在时创建包含两道力扣题的示例。多个工作区文件夹可各自配置；也可用工作区设置 `leetcode.studyPlanFiles` 指定其他 JSON 文件，空数组禁用自定义题单。文件名为 `leetcode-study-plans.json` 时有 JSON 校验和补全。
 
@@ -205,3 +207,5 @@ npm run lint
 npm test
 npm exec --yes --package=@vscode/vsce@4.0.0 -- vsce package --out LeetCode-CN-0.22.2.vsix
 ```
+
+本地 OD 的 Java 文件可以只保留 package、外层类、main 和 Solution 等练习代码，无需嵌入题面注释或 `@lc` 标记。插件根据题单索引中同一行的 Markdown 与 Java 链接关联题目；点击代码中的“题目描述”后，在右侧查看对应 Markdown，代码编辑器保留焦点。

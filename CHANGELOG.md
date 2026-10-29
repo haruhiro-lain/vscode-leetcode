@@ -3,6 +3,17 @@ All notable changes to the "leetcode" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.22.3] 本地 OD 题面与提交入口
+### Added
+- 本地题面有与文件名一致的 HydroOJ 题号时，在正文底部显示“提交代码”按钮，使用系统浏览器打开对应题目的提交页面。
+- 入口随当前题面切换和修改更新，保留题号前导零，并忽略已切换题目的旧按钮消息。
+
+### Fixed
+- 连续切换本地题目复用右侧题面面板时，不再强制聚焦第二编辑器组，保留 Java 编辑器焦点。
+
+### Tests
+- 覆盖不含题面注释的 OD Java，确认题目描述入口仍位于 Solution 前，并请求在右侧打开本地 Markdown。
+
 ## [0.22.2] 本地题代码中的题目描述
 ### Added
 - 自定义本地题单关联的 Java 文件及 Markdown 源文件显示题目描述快捷入口，使用插件题面视图展示本地内容。

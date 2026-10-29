@@ -91,6 +91,19 @@ test('editor descriptions open beside code with focus preserved, including refre
     assert.equal(panels.length, 1); provider.dispose();
 });
 
+test('reusing the right-hand statement panel never focuses the second editor group', async () => {
+    const first = document('P00513-first.md', '# First');
+    const next = document('P00514-next.md', '# Next');
+    await provider.show(first.uri, [], true);
+    await provider.show(next.uri, [], true);
+    await panelRefresh();
+    assert.equal(panels.length, 1);
+    assert.deepEqual(panels[0].column, { viewColumn: 2, preserveFocus: true });
+    assert.equal(commands.some(item => item.command === 'workbench.action.focusSecondEditorGroup'), false);
+    provider.dispose();
+    async function panelRefresh() { await panels[0].message({ command: 'refresh' }); }
+});
+
 test('local statements render tables, highlighted code, images and relative document links in the plugin panel', async () => {
     const doc = document('题目/一.md', '# 一道题\n\n| 输入 | 输出 |\n|---|---|\n| 1 | 2 |\n\n```java\nint n = 1;\n```\n\n![图](images/a%20b.png)\n[下一题](二.md#示例)\n\n## 示例\n正文');
     await provider.show(doc.uri);
@@ -225,5 +238,36 @@ test('Start Coding is conditional on matching Java files and passes the current 
     assert.equal(commands.length, 1);
     javaFiles = []; await panel.message({ command: 'refresh' });
     assert.doesNotMatch(panel.webview.html, /id="solve"/);
+    provider.dispose();
+});
+
+test('Hydro submission button is below the entire statement and opens its submission form in the browser', async () => {
+    const doc = document('od/P00513-数列.md', '# 数列\n\n- 题目编号：[P00513](https://hydro.ac/d/hwod_oj/p/P00513)\n\n最后一段题面');
+    await provider.show(doc.uri);
+    const panel = panels[0], html = panel.webview.html;
+    assert.match(html, /<button id="submit-local">提交代码<\/button>/);
+    assert.ok(html.indexOf('最后一段题面') < html.indexOf('<div class="local-submission">'));
+    assert.match(html, /postMessage\(\{command: 'submitLocal', document:/);
+    await panel.message({ command: 'submitLocal', document: doc.uri.toString(), href: 'https://evil.test/' });
+    assert.deepEqual(external, ['https://hydro.ac/d/hwod_oj/p/P00513/submit']);
+    assert.equal(findLocalCompletion(doc.text), undefined);
+    provider.dispose();
+});
+
+test('submission uses the current document after navigation and ignores stale button messages', async () => {
+    const first = document('P00001-first.md', '# 一\n\n- 题目编号：[P00001](https://hydro.ac/d/hwod_oj/p/P00001)');
+    const second = document('P00002-second.md', '# 二\n\n- 题目编号：[P00002](https://hydro.ac/d/hwod_oj/p/P00002)');
+    await provider.show(first.uri);
+    const panel = panels[0];
+    await provider.show(second.uri);
+    await panel.message({ command: 'submitLocal', document: first.uri.toString() });
+    assert.deepEqual(external, []);
+    await panel.message({ command: 'submitLocal', document: second.uri.toString() });
+    assert.deepEqual(external, ['https://hydro.ac/d/hwod_oj/p/P00002/submit']);
+    second.text = '# 编号不匹配\n\n- 题目编号：[P00001](https://hydro.ac/d/hwod_oj/p/P00001)';
+    documentChanged({ document: second });
+    assert.doesNotMatch(panel.webview.html, /id="submit-local"/);
+    await panel.message({ command: 'submitLocal', document: second.uri.toString() });
+    assert.equal(external.length, 1);
     provider.dispose();
 });

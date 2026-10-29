@@ -1,6 +1,6 @@
 # LeetCode-CN
 
-个人定制的力扣中文插件，独立扩展标识为 **`haruhiro-lain.leetcode-cn`**，基于 [LeetCode-OpenSource/vscode-leetcode](https://github.com/LeetCode-OpenSource/vscode-leetcode)，保留原 MIT 许可。定制分支为 `feat/personalization`，当前版本为 **0.22.2**。安装与旧版登录迁移见 [定制说明](PERSONALIZATION.md)；算法工作空间使用 `haruhiroLain_work` 的 `main` 分支。
+个人定制的力扣中文插件，独立扩展标识为 **`haruhiro-lain.leetcode-cn`**，基于 [LeetCode-OpenSource/vscode-leetcode](https://github.com/LeetCode-OpenSource/vscode-leetcode)，保留原 MIT 许可。定制分支为 `feat/personalization`，当前版本为 **0.22.3**。安装与旧版登录迁移见 [定制说明](PERSONALIZATION.md)；算法工作空间使用 `haruhiroLain_work` 的 `main` 分支。
 
 > Solve LeetCode problems in VS Code
 
@@ -164,3 +164,5 @@ Refer to [CHANGELOG](https://github.com/LeetCode-OpenSource/vscode-leetcode/blob
 
 - This extension is based on [@skygragon](https://github.com/skygragon)'s [leetcode-cli](https://github.com/skygragon/leetcode-cli) open source project.
 - Special thanks to our [contributors](https://github.com/LeetCode-OpenSource/vscode-leetcode/blob/master/ACKNOWLEDGEMENTS.md).
+
+本地 OD 的 Java 文件可以只保留 package、外层类、main 和 Solution 等练习代码，无需嵌入题面注释或 `@lc` 标记。插件根据题单索引中同一行的 Markdown 与 Java 链接关联题目；点击代码中的“题目描述”后，在右侧查看对应 Markdown，代码编辑器保留焦点。

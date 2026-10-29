@@ -152,6 +152,21 @@ test('associated local Java and Markdown offer description previews without remo
     } finally { localProblems = []; shortcuts = ['submit', 'test', 'description']; }
 });
 
+test('OD Java without statement comments keeps the local description above Solution', () => {
+    const code = 'package com.haruhiro_lain.od.newsystem;\n\nclass ODP00513 {\n    public static void main(String[] args) {}\n\n    class Solution { long answer() { return 42; } }\n}';
+    const odUri = { fsPath: 'C:/practice/newsystem/P00513.计算数列位置n的值.java' };
+    const odDocument = { ...document, uri: odUri, getText: () => code,
+        positionAt: offset => ({ line: code.slice(0, offset).split('\n').length - 1 }) };
+    try {
+        localProblems = [{ file: 'C:/practice/problems/P00513-计算数列位置N的值.md', name: '计算数列位置N的值' }];
+        const lenses = provider.provideCodeLenses(odDocument);
+        assert.equal(lenses.length, 1);
+        assert.equal(lenses[0].range.start.line, 4);
+        assert.deepEqual(lenses[0].command, { title: '题目描述', command: 'leetcode.previewLocalMarkdown', arguments: [odUri, true] });
+        assert.doesNotMatch(code, /@lc|题目描述|hydro\.ac/);
+    } finally { localProblems = []; }
+});
+
 test('submit/test use exactly the clicked solution and remove temporary files on success or error', async () => {
     const target = findJavaSolutions(source)[1];
     await submitSolution(uri, target);

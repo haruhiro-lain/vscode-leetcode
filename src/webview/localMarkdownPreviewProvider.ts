@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 import { ILeetCodeWebviewOption, LeetCodeWebview } from "./LeetCodeWebview";
 import { markdownEngine } from "./markdownEngine";
 import { localMarkdownHtml, localMarkdownTarget } from "./localMarkdownHtml";
+import { localHydroSubmissionUrl } from "./localHydroSubmission";
 import { completionEdit, findLocalCompletion, withLocalCompletion } from "../studyPlans/localCompletion";
 import { findLocalJavaFiles } from "../studyPlans/localJavaFiles";
 import { studyPlanManager } from "../studyPlans/studyPlanManager";
@@ -86,12 +87,20 @@ export class LocalMarkdownPreviewProvider extends LeetCodeWebview {
             },
         });
         return localMarkdownHtml(body, markdownEngine.getStyles((uri) => webview.asWebviewUri(uri)), webview.cspSource,
-            crypto.randomBytes(18).toString("hex"), this.fragment, this.document!.uri.toString(), this.javaFiles.length > 0);
+            crypto.randomBytes(18).toString("hex"), this.fragment, this.document!.uri.toString(), this.javaFiles.length > 0,
+            localHydroSubmissionUrl(content, file) !== undefined);
     }
 
     protected async onDidReceiveMessage(message: { command: string; href?: string; checked?: boolean; document?: string }): Promise<void> {
         if (!this.document) return;
-        if (message.command === "startCoding") {
+        if (message.command === "submitLocal") {
+            if (message.document !== this.document.uri.toString()) return;
+            const url = localHydroSubmissionUrl(this.document.getText(), this.document.uri.fsPath);
+            if (!url) return;
+            try {
+                if (!await vscode.env.openExternal(vscode.Uri.parse(url))) vscode.window.showErrorMessage("无法打开浏览器，请重试提交代码入口。");
+            } catch (error) { vscode.window.showErrorMessage("无法打开提交页面：" + error.message); }
+        } else if (message.command === "startCoding") {
             if (this.javaFiles.length && message.document === this.document.uri.toString()) {
                 await vscode.commands.executeCommand("leetcode.startLocalProblem", this.document.uri, this.javaFiles);
             }

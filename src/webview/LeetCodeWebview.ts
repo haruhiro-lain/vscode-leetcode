@@ -30,7 +30,7 @@ export abstract class LeetCodeWebview implements Disposable {
             workspace.onDidChangeConfiguration(this.onDidChangeConfiguration, this, this.listeners);
         } else {
             this.panel.title = title;
-            if (viewColumn === ViewColumn.Two) {
+            if (viewColumn === ViewColumn.Two && !preserveFocus) {
                 // Make sure second group exists. See vscode#71608 issue
                 commands.executeCommand("workbench.action.focusSecondEditorGroup").then(() => {
                     this.panel!.reveal(viewColumn, preserveFocus);
