@@ -8,6 +8,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { leetCodeChannel } from "../leetCodeChannel";
 import { isWindows } from "../utils/osUtils";
+import { completionInline } from "../studyPlans/localCompletion";
 
 class MarkdownEngine implements vscode.Disposable {
 
@@ -41,18 +42,21 @@ class MarkdownEngine implements vscode.Disposable {
         return this.engine.render(md, env);
     }
 
-    public getStyles(): string {
+    public getStyles(resourceUri?: (uri: vscode.Uri) => vscode.Uri): string {
         return [
-            this.getBuiltinStyles(),
+            this.getBuiltinStyles(resourceUri),
             this.getSettingsStyles(),
         ].join(os.EOL);
     }
 
-    private getBuiltinStyles(): string {
+    private getBuiltinStyles(resourceUri?: (uri: vscode.Uri) => vscode.Uri): string {
         let styles: vscode.Uri[] = [];
         try {
             const stylePaths: string[] = require(path.join(this.config.extRoot, "package.json"))["contributes"]["markdown.previewStyles"];
-            styles = stylePaths.map((p: string) => vscode.Uri.file(path.join(this.config.extRoot, p)).with({ scheme: "vscode-resource" }));
+            styles = stylePaths.map((p: string) => {
+                const uri = vscode.Uri.file(path.join(this.config.extRoot, p));
+                return resourceUri ? resourceUri(uri) : uri.with({ scheme: "vscode-resource" });
+            });
         } catch (error) {
             leetCodeChannel.appendLine("[Error] Fail to load built-in markdown style file.");
         }
@@ -96,6 +100,17 @@ class MarkdownEngine implements vscode.Disposable {
         this.addCodeBlockHighlight(md);
         this.addImageUrlCompletion(md);
         this.addLinkValidator(md);
+        this.addLocalLinkCompletion(md);
+        md.core.ruler.after("inline", "leetcode_local_completion", (state: any) => {
+            if (!state.env.localCompletionHtml) return;
+            for (const token of state.tokens) {
+                if (token.type === "inline" && token.map && token.map[0] === state.env.localCompletionLine && completionInline.test(token.content)) {
+                    const checkbox = new state.Token("html_inline", "", 0);
+                    checkbox.content = state.env.localCompletionHtml;
+                    token.children = [checkbox];
+                }
+            }
+        });
         return md;
     }
 
@@ -122,6 +137,7 @@ class MarkdownEngine implements vscode.Disposable {
         // tslint:disable-next-line:typedef
         md.renderer.rules["image"] = (tokens, idx, options, env, self) => {
             const imageSrc: string[] | undefined = tokens[idx].attrs.find((value: string[]) => value[0] === "src");
+            if (env.resolveImage && imageSrc) imageSrc[1] = env.resolveImage(imageSrc[1]);
             if (env.host && imageSrc && imageSrc[1].startsWith("/")) {
                 imageSrc[1] = `${env.host}${imageSrc[1]}`;
             }
@@ -134,6 +150,27 @@ class MarkdownEngine implements vscode.Disposable {
         md.validateLink = (link: string): boolean => {
             // support file:// protocal link
             return validateLink(link) || link.startsWith("file:");
+        };
+    }
+
+    private addLocalLinkCompletion(md: MarkdownIt): void {
+        const link = md.renderer.rules["link_open"];
+        md.renderer.rules["link_open"] = (tokens, idx, options, env, self) => {
+            if (env.resolveLink) tokens[idx].attrSet("href", env.resolveLink(tokens[idx].attrGet("href") || ""));
+            return link ? link(tokens, idx, options, env, self) : self.renderToken(tokens, idx, options);
+        };
+        const heading = md.renderer.rules["heading_open"];
+        md.renderer.rules["heading_open"] = (tokens, idx, options, env, self) => {
+            if (env.localMarkdown) {
+                const title = tokens[idx + 1].content;
+                const slug = title.trim().toLowerCase().replace(/\s+/g, "-").replace(/[!"#$%&'()*+,./:;<=>?@[\]\\^`{|}~]/g, "");
+                const ids: Set<string> = env.headingIds || (env.headingIds = new Set<string>());
+                let id = slug;
+                for (let suffix = 1; ids.has(id); suffix++) id = slug + "-" + suffix;
+                ids.add(id);
+                tokens[idx].attrSet("id", id);
+            }
+            return heading ? heading(tokens, idx, options, env, self) : self.renderToken(tokens, idx, options);
         };
     }
 }

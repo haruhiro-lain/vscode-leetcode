@@ -92,6 +92,12 @@ class LeetCodeManager extends EventEmitter {
     private setSignedIn(username: string): void {
         this.currentUser = username;
         this.userStatus = UserStatus.SignedIn;
+        this.updateLoginContext();
+    }
+
+    private updateLoginContext(): void {
+        vscode.commands.executeCommand("setContext", "leetcode.signedIn", this.userStatus === UserStatus.SignedIn && !!this.currentUser)
+            .then(undefined, () => leetCodeChannel.appendLine("无法更新登录按钮显示状态。"));
     }
 
     private isCurrentSession(revision: number, attempt: number): boolean {
@@ -260,6 +266,7 @@ class LeetCodeManager extends EventEmitter {
         this.loginAttempt++;
         this.currentUser = undefined;
         this.userStatus = UserStatus.SignedOut;
+        this.updateLoginContext();
         globalState.removeAll();
         this.emit("statusChanged");
     }

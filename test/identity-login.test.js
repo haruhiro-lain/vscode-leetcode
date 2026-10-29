@@ -8,6 +8,7 @@ const originalLoad = Module._load;
 Module._load = function(name, parent, isMain) {
     const mocks = {
         vscode: { env: { uriScheme: 'vscode', appName: 'Visual Studio Code' },
+            commands: { executeCommand: async () => undefined },
             workspace: { getConfiguration: () => ({ get: () => endpoint }) },
             window: {
                 withProgress: async (_opts, task) => task({ report() {} }),

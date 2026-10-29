@@ -1,7 +1,7 @@
 // Copyright (c) jdneo. All rights reserved.
 // Licensed under the MIT license.
 
-import { commands, ConfigurationChangeEvent, Disposable, ViewColumn, WebviewPanel, window, workspace } from "vscode";
+import { commands, ConfigurationChangeEvent, Disposable, ViewColumn, WebviewOptions, WebviewPanel, window, workspace } from "vscode";
 import { openSettingsEditor, promptHintMessage } from "../utils/uiUtils";
 import { markdownEngine } from "./markdownEngine";
 
@@ -21,11 +21,9 @@ export abstract class LeetCodeWebview implements Disposable {
         const { title, viewColumn, preserveFocus } = this.getWebviewOption();
         if (!this.panel) {
             this.panel = window.createWebviewPanel(this.viewType, title, { viewColumn, preserveFocus }, {
-                enableScripts: true,
-                enableCommandUris: true,
+                ...this.getWebviewOptions(),
                 enableFindWidget: true,
                 retainContextWhenHidden: true,
-                localResourceRoots: markdownEngine.localResourceRoots,
             });
             this.panel.onDidDispose(this.onDidDisposeWebview, this, this.listeners);
             this.panel.webview.onDidReceiveMessage(this.onDidReceiveMessage, this, this.listeners);
@@ -41,6 +39,7 @@ export abstract class LeetCodeWebview implements Disposable {
                 this.panel.reveal(viewColumn, preserveFocus);
             }
         }
+        this.panel.webview.options = this.getWebviewOptions();
         this.panel.webview.html = this.getWebviewContent();
         this.showMarkdownConfigHint();
     }
@@ -60,6 +59,10 @@ export abstract class LeetCodeWebview implements Disposable {
     }
 
     protected async onDidReceiveMessage(_message: any): Promise<void> { /* no special rule */ }
+
+    protected getWebviewOptions(): WebviewOptions {
+        return { enableScripts: true, enableCommandUris: true, localResourceRoots: markdownEngine.localResourceRoots };
+    }
 
     protected abstract getWebviewOption(): ILeetCodeWebviewOption;
 

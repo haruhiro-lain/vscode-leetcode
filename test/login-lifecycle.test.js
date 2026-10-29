@@ -10,10 +10,12 @@ const signedIn = { isSignedIn: true, username: 'fixture', isPremium: false, avat
 let query, manager, errors, writes, messages;
 let bridgeEnv;
 let signouts;
+let contexts;
 const originalLoad = Module._load;
 Module._load = function(name, parent, isMain) {
     const mocks = {
         vscode: { env: { uriScheme: 'vscode', appName: 'VS Code' },
+            commands: { executeCommand: async (command, key, value) => { if (command === 'setContext') contexts.set(key, value); } },
             window: { withProgress: async (_, fn) => fn({ report() {} }),
                 showInformationMessage: msg => messages.push(msg) }, ProgressLocation: { Notification: 1 } },
         './leetCodeExecutor': { leetCodeExecutor: { node: process.execPath, signOut: async () => { signouts++; } } },
@@ -35,7 +37,7 @@ beforeEach(() => {
     globalState.removeAll();
     globalState.setCookie(oldCookie);
     globalState.setUserStatus(signedIn);
-    errors = []; writes = []; messages = []; signouts = 0;
+    errors = []; writes = []; messages = []; signouts = 0; contexts = new Map();
     query = async () => signedIn;
     manager = new Manager();
     manager.setCookieToCli = async (...args) => writes.push(args);
@@ -43,6 +45,28 @@ beforeEach(() => {
 });
 const callback = cookie => ({ authority: extensionId, query: 'cookie=' + encodeURIComponent(cookie) });
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
+
+test('login UI context follows restored login, temporary network failures and explicit logout', async () => {
+    await manager.getLoginStatus();
+    assert.equal(contexts.get('leetcode.signedIn'), true);
+    query = async () => { throw Error('network'); };
+    assert.equal(await manager.confirmSessionExpired(), 'unknown');
+    assert.equal(contexts.get('leetcode.signedIn'), true);
+    await manager.getLoginStatus();
+    assert.equal(contexts.get('leetcode.signedIn'), true);
+    await manager.signOut();
+    assert.equal(contexts.get('leetcode.signedIn'), false);
+});
+
+test('sign-in visibility is gated in the toolbar and command palette, with inverse sign-out visibility', () => {
+    const manifest = require('../package.json');
+    const toolbar = manifest.contributes.menus['view/title'];
+    const palette = manifest.contributes.menus.commandPalette;
+    for (const entries of [toolbar, palette]) {
+        assert.match(entries.find(item => item.command === 'leetcode.signin').when, /!leetcode\.signedIn/);
+        assert.match(entries.find(item => item.command === 'leetcode.signout').when, /(?:^|&&\s*)leetcode\.signedIn$/);
+    }
+});
 
 test('authorization validates candidate without replacing old state, then synchronizes both stores and UI', async () => {
     query = async candidate => {
@@ -56,6 +80,7 @@ test('authorization validates candidate without replacing old state, then synchr
     assert.equal(globalState.getCookie(), newCookie);
     assert.deepEqual(writes, [[newCookie, 'fixture', false]]);
     assert.equal(messages.length, 1);
+    assert.equal(contexts.get('leetcode.signedIn'), true);
 });
 
 test('incomplete cookies and explicitly anonymous authorizations preserve existing credentials', async () => {
@@ -85,6 +110,7 @@ test('CLI session-expired output is corrected when authoritative userStatus rema
     assert.equal(manager.getUser(), 'fixture');
     assert.equal(globalState.getCookie(), oldCookie);
     assert.equal(writes.length, 1);
+    assert.equal(contexts.get('leetcode.signedIn'), true);
 });
 
 test('only an explicit signed-out response clears persisted and in-memory credentials', async () => {
@@ -93,6 +119,7 @@ test('only an explicit signed-out response clears persisted and in-memory creden
     assert.equal(globalState.getCookie(), undefined);
     assert.equal(globalState.getUserStatus(), undefined);
     assert.equal(manager.getUser(), undefined);
+    assert.equal(contexts.get('leetcode.signedIn'), false);
 });
 
 test('concurrent expiration reports share one remote check', async () => {

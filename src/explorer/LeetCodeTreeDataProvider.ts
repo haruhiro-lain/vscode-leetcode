@@ -10,6 +10,8 @@ import { Category, defaultProblem, ProblemState } from "../shared";
 import { explorerNodeManager } from "./explorerNodeManager";
 import { LeetCodeNode } from "./LeetCodeNode";
 import { globalState } from "../globalState";
+import { StudyPlanNode } from "../studyPlans/StudyPlanNode";
+import { studyPlanManager } from "../studyPlans/studyPlanManager";
 
 export class LeetCodeTreeDataProvider implements vscode.TreeDataProvider<LeetCodeNode> {
     private context: vscode.ExtensionContext;
@@ -25,11 +27,29 @@ export class LeetCodeTreeDataProvider implements vscode.TreeDataProvider<LeetCod
     }
 
     public async refresh(): Promise<void> {
-        await explorerNodeManager.refreshCache();
+        await Promise.all([explorerNodeManager.refreshCache(), studyPlanManager.refresh()]);
+        this.onDidChangeTreeDataEvent.fire(null);
+    }
+
+    public async refreshStudyPlans(): Promise<void> {
+        await studyPlanManager.refresh();
         this.onDidChangeTreeDataEvent.fire(null);
     }
 
     public getTreeItem(element: LeetCodeNode): vscode.TreeItem | Thenable<vscode.TreeItem> {
+        if (element instanceof StudyPlanNode) {
+            const isLocal = element.entry.kind === "markdown";
+            return {
+                id: element.id,
+                label: studyPlanManager.getLabel(element),
+                tooltip: studyPlanManager.getTooltip(element),
+                collapsibleState: isLocal ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Collapsed,
+                contextValue: isLocal ? "local-markdown" : "studyplan",
+                resourceUri: element.uri,
+                command: isLocal ? element.previewCommand : undefined,
+                iconPath: isLocal ? this.context.asAbsolutePath(path.join("resources", element.state === ProblemState.AC ? "check.png" : "blank.png")) : undefined,
+            };
+        }
         if (element.id === "notSignIn") {
             return {
                 label: element.name,
@@ -60,6 +80,7 @@ export class LeetCodeTreeDataProvider implements vscode.TreeDataProvider<LeetCod
     }
 
     public getChildren(element?: LeetCodeNode | undefined): vscode.ProviderResult<LeetCodeNode[]> {
+        if (element instanceof StudyPlanNode) return studyPlanManager.getChildren(element);
         if (!leetCodeManager.getUser()) {
             return [
                 new LeetCodeNode(
@@ -69,17 +90,16 @@ export class LeetCodeTreeDataProvider implements vscode.TreeDataProvider<LeetCod
                     }),
                     false
                 ),
+                ...studyPlanManager.getRoots(),
             ];
         }
         if (!element) {
             // Root view
-            return explorerNodeManager.getRootNodes();
+            return studyPlanManager.getRoots();
         } else {
             switch (element.id) {
                 case Category.All:
                     return explorerNodeManager.getAllNodes();
-                case Category.Hot100:
-                    return explorerNodeManager.getHot100Nodes();
                 case Category.Favorite:
                     return explorerNodeManager.getFavoriteNodes();
                 case Category.Difficulty:
@@ -127,12 +147,11 @@ export class LeetCodeTreeDataProvider implements vscode.TreeDataProvider<LeetCod
 
     private getSubCategoryTooltip(element: LeetCodeNode): string {
         // return '' unless it is a sub-category node
-        if (element.isProblem || element.id === "ROOT" || (element.id in Category && element.id !== Category.Hot100)) {
+        if (element.isProblem || element.id === "ROOT" || element.id in Category) {
             return "";
         }
 
-        const childernNodes: LeetCodeNode[] = element.id === Category.Hot100
-            ? explorerNodeManager.getHot100Nodes() : explorerNodeManager.getChildrenNodesById(element.id);
+        const childernNodes: LeetCodeNode[] = explorerNodeManager.getChildrenNodesById(element.id);
 
         let acceptedNum: number = 0;
         let failedNum: number = 0;

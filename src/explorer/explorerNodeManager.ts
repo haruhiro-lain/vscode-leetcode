@@ -8,10 +8,10 @@ import { getSortingStrategy } from "../commands/plugin";
 import { Category, defaultProblem, ProblemState, SortingStrategy } from "../shared";
 import { shouldHideSolvedProblem } from "../utils/settingUtils";
 import { LeetCodeNode } from "./LeetCodeNode";
-import { hot100ProblemIds } from "../data/hot100";
 
 class ExplorerNodeManager implements Disposable {
     private explorerNodeMap: Map<string, LeetCodeNode> = new Map<string, LeetCodeNode>();
+    private allProblemNodeMap: Map<string, LeetCodeNode> = new Map<string, LeetCodeNode>();
     private companySet: Set<string> = new Set<string>();
     private tagSet: Set<string> = new Set<string>();
 
@@ -19,10 +19,12 @@ class ExplorerNodeManager implements Disposable {
         this.dispose();
         const shouldHideSolved: boolean = shouldHideSolvedProblem();
         for (const problem of await list.listProblems()) {
+            const node = new LeetCodeNode(problem);
+            this.allProblemNodeMap.set(problem.id, node);
             if (shouldHideSolved && problem.state === ProblemState.AC) {
                 continue;
             }
-            this.explorerNodeMap.set(problem.id, new LeetCodeNode(problem));
+            this.explorerNodeMap.set(problem.id, node);
             for (const company of problem.companies) {
                 this.companySet.add(company);
             }
@@ -37,10 +39,6 @@ class ExplorerNodeManager implements Disposable {
             new LeetCodeNode(Object.assign({}, defaultProblem, {
                 id: Category.All,
                 name: Category.All,
-            }), false),
-            new LeetCodeNode(Object.assign({}, defaultProblem, {
-                id: Category.Hot100,
-                name: Category.Hot100,
             }), false),
             new LeetCodeNode(Object.assign({}, defaultProblem, {
                 id: Category.Difficulty,
@@ -67,9 +65,9 @@ class ExplorerNodeManager implements Disposable {
         );
     }
 
-    public getHot100Nodes(): LeetCodeNode[] {
+    public getNodesByIds(problemIds: readonly string[]): LeetCodeNode[] {
         const nodes: LeetCodeNode[] = [];
-        for (const id of hot100ProblemIds) {
+        for (const id of problemIds) {
             const node = this.explorerNodeMap.get(id);
             if (node) nodes.push(node);
         }
@@ -120,8 +118,8 @@ class ExplorerNodeManager implements Disposable {
         return res;
     }
 
-    public getNodeById(id: string): LeetCodeNode | undefined {
-        return this.explorerNodeMap.get(id);
+    public getNodeById(id: string, includeHidden: boolean = false): LeetCodeNode | undefined {
+        return (includeHidden ? this.allProblemNodeMap : this.explorerNodeMap).get(id);
     }
 
     public getFavoriteNodes(): LeetCodeNode[] {
@@ -164,6 +162,7 @@ class ExplorerNodeManager implements Disposable {
 
     public dispose(): void {
         this.explorerNodeMap.clear();
+        this.allProblemNodeMap.clear();
         this.companySet.clear();
         this.tagSet.clear();
     }

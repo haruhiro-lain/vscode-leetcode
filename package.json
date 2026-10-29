@@ -2,7 +2,7 @@
     "name": "leetcode-cn",
     "displayName": "LeetCode-CN",
     "description": "在 VS Code 中浏览力扣题目、编写题解、运行测试、提交代码并查看中文判题结果。",
-    "version": "0.19.4",
+    "version": "0.22.0",
     "author": "haruhiro-lain",
     "publisher": "haruhiro-lain",
     "license": "MIT",
@@ -41,7 +41,10 @@
         "onCommand:leetcode.submitSolution",
         "onCommand:leetcode.switchDefaultLanguage",
         "onCommand:leetcode.problems.sort",
-        "onView:leetCodeExplorer"
+        "onView:leetCodeExplorer",
+        "onCommand:leetcode.editStudyPlans",
+        "onCommand:leetcode.previewLocalMarkdown",
+        "onCommand:leetcode.openLocalMarkdown"
     ],
     "main": "./out/src/extension",
     "contributes": {
@@ -82,7 +85,11 @@
             {
                 "command": "leetcode.pickOne",
                 "title": "随机一题",
-                "category": "LeetCode-CN"
+                "category": "LeetCode-CN",
+                "icon": {
+                    "light": "resources/light/shuffle.svg",
+                    "dark": "resources/dark/shuffle.svg"
+                }
             },
             {
                 "command": "leetcode.showProblem",
@@ -143,6 +150,23 @@
                 "title": "题目排序",
                 "category": "LeetCode-CN",
                 "icon": "$(sort-precedence)"
+            },
+            {
+                "command": "leetcode.editStudyPlans",
+                "title": "自定义题单",
+                "category": "LeetCode-CN",
+                "icon": "$(new-file)"
+            },
+            {
+                "command": "leetcode.previewLocalMarkdown",
+                "title": "预览本地题目",
+                "category": "LeetCode-CN",
+                "icon": "$(preview)"
+            },
+            {
+                "command": "leetcode.openLocalMarkdown",
+                "title": "打开题目源文件",
+                "category": "LeetCode-CN"
             }
         ],
         "viewsContainers": {
@@ -158,7 +182,7 @@
             "leetcode": [
                 {
                     "id": "leetCodeExplorer",
-                    "name": "题目列表"
+                    "name": "LeetCode-CN"
                 }
             ]
         },
@@ -167,17 +191,17 @@
                 {
                     "command": "leetcode.toggleLeetCodeCn",
                     "when": "view == leetCodeExplorer",
-                    "group": "navigation@0"
+                    "group": "overflow@2"
                 },
                 {
                     "command": "leetcode.signin",
-                    "when": "view == leetCodeExplorer",
-                    "group": "navigation@1"
+                    "when": "view == leetCodeExplorer && !leetcode.signedIn",
+                    "group": "overflow@0"
                 },
                 {
                     "command": "leetcode.searchProblem",
                     "when": "view == leetCodeExplorer",
-                    "group": "navigation@2"
+                    "group": "navigation@1"
                 },
                 {
                     "command": "leetcode.refreshExplorer",
@@ -186,18 +210,23 @@
                 },
                 {
                     "command": "leetcode.signout",
-                    "when": "view == leetCodeExplorer",
+                    "when": "view == leetCodeExplorer && leetcode.signedIn",
                     "group": "overflow@1"
                 },
                 {
                     "command": "leetcode.pickOne",
                     "when": "view == leetCodeExplorer",
-                    "group": "overflow@2"
+                    "group": "navigation@2"
                 },
                 {
                     "command": "leetcode.problems.sort",
                     "when": "view == leetCodeExplorer",
                     "group": "overflow@3"
+                },
+                {
+                    "command": "leetcode.editStudyPlans",
+                    "when": "view == leetCodeExplorer",
+                    "group": "navigation@4"
                 }
             ],
             "view/item/context": [
@@ -225,6 +254,16 @@
                     "command": "leetcode.removeFavorite",
                     "when": "view == leetCodeExplorer && viewItem == problem-favorite",
                     "group": "inline"
+                },
+                {
+                    "command": "leetcode.previewLocalMarkdown",
+                    "when": "view == leetCodeExplorer && viewItem == local-markdown",
+                    "group": "inline"
+                },
+                {
+                    "command": "leetcode.openLocalMarkdown",
+                    "when": "view == leetCodeExplorer && viewItem == local-markdown",
+                    "group": "leetcode@1"
                 }
             ],
             "commandPalette": [
@@ -247,6 +286,18 @@
                 {
                     "command": "leetcode.removeFavorite",
                     "when": "never"
+                },
+                {
+                    "command": "leetcode.openLocalMarkdown",
+                    "when": "never"
+                },
+                {
+                    "command": "leetcode.signin",
+                    "when": "!leetcode.signedIn"
+                },
+                {
+                    "command": "leetcode.signout",
+                    "when": "leetcode.signedIn"
                 }
             ],
             "explorer/context": [
@@ -259,6 +310,11 @@
                     "command": "leetcode.submitSolution",
                     "when": "explorerResourceIsFolder == false",
                     "group": "leetcode@2"
+                },
+                {
+                    "command": "leetcode.previewLocalMarkdown",
+                    "when": "explorerResourceIsFolder == false && resourceExtname == .md",
+                    "group": "leetcode@0"
                 }
             ],
             "editor/context": [
@@ -282,6 +338,11 @@
                 {
                     "command": "leetcode.previewProblem",
                     "group": "leetcode@4"
+                },
+                {
+                    "command": "leetcode.previewLocalMarkdown",
+                    "when": "resourceExtname == .md",
+                    "group": "leetcode@0"
                 }
             ]
         },
@@ -732,8 +793,26 @@
                         "default": true,
                         "scope": "application",
                         "description": "允许 LeetCode 上报匿名使用数据以改进产品。"
+                    },
+                    "leetcode.studyPlanFiles": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "minLength": 1
+                        },
+                        "default": [
+                            ".vscode/leetcode-study-plans.json"
+                        ],
+                        "scope": "window",
+                        "description": "题单 JSON 文件，包含默认分类与自定义题单，侧边栏按 plans 数组顺序显示。相对路径从工作区根目录解析，支持 ${workspaceFolder}；题单内路径相对 JSON 所在目录。保存后自动刷新。空数组禁用配置并恢复原默认分类。"
                     }
                 }
+            }
+        ],
+        "jsonValidation": [
+            {
+                "fileMatch": "**/leetcode-study-plans.json",
+                "url": "./resources/study-plans.schema.json"
             }
         ]
     },

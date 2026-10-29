@@ -1,6 +1,6 @@
 # LeetCode-CN
 
-个人定制的力扣中文插件，独立扩展标识为 **`haruhiro-lain.leetcode-cn`**，基于 [LeetCode-OpenSource/vscode-leetcode](https://github.com/LeetCode-OpenSource/vscode-leetcode)，保留原 MIT 许可。定制分支为 `feat/personalization`，当前版本为 **0.19.4**。安装与旧版登录迁移见 [定制说明](PERSONALIZATION.md)；算法工作空间使用 `haruhiroLain_work` 的 `main` 分支。
+个人定制的力扣中文插件，独立扩展标识为 **`haruhiro-lain.leetcode-cn`**，基于 [LeetCode-OpenSource/vscode-leetcode](https://github.com/LeetCode-OpenSource/vscode-leetcode)，保留原 MIT 许可。定制分支为 `feat/personalization`，当前版本为 **0.22.0**。安装与旧版登录迁移见 [定制说明](PERSONALIZATION.md)；算法工作空间使用 `haruhiroLain_work` 的 `main` 分支。
 
 > Solve LeetCode problems in VS Code
 

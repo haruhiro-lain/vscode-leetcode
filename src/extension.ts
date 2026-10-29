@@ -28,6 +28,9 @@ import TrackData from "./utils/trackingUtils";
 import { globalState } from "./globalState";
 import { IJavaSolutionTarget } from "./utils/javaSolutionUtils";
 import { migrateLegacyState } from "./utils/legacyStateMigration";
+import { studyPlanManager } from "./studyPlans/studyPlanManager";
+import { localMarkdownPreviewProvider } from "./webview/localMarkdownPreviewProvider";
+import { openLocalMarkdown, previewLocalMarkdown } from "./commands/localProblems";
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     try {
@@ -38,6 +41,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         } catch (_) {
             vscode.window.showWarningMessage("旧插件登录状态迁移未完成，请重新运行安装脚本；也可直接登录 LeetCode-CN。");
         }
+        const cachedUser = globalState.getUserStatus();
+        await vscode.commands.executeCommand("setContext", "leetcode.signedIn", !!(cachedUser?.isSignedIn && cachedUser.username));
         if (!(await leetCodeExecutor.meetRequirements(context))) {
             throw new Error("当前环境不满足插件运行要求。");
         }
@@ -48,12 +53,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         });
 
         leetCodeTreeDataProvider.initialize(context);
+        studyPlanManager.initialize(() => leetCodeTreeDataProvider.refreshStudyPlans());
+        await studyPlanManager.refresh();
 
         context.subscriptions.push(
             vscode.window.registerUriHandler({ handleUri: leetCodeManager.handleUriSignIn }),
             leetCodeStatusBarController,
             leetCodeChannel,
             leetCodePreviewProvider,
+            localMarkdownPreviewProvider,
+            studyPlanManager,
             leetCodeSubmissionProvider,
             leetCodeSolutionProvider,
             leetCodeExecutor,
@@ -83,6 +92,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             vscode.commands.registerCommand("leetcode.searchProblem", () => show.searchProblem()),
             vscode.commands.registerCommand("leetcode.showSolution", (input: LeetCodeNode | vscode.Uri) => show.showSolution(input)),
             vscode.commands.registerCommand("leetcode.refreshExplorer", () => leetCodeTreeDataProvider.refresh()),
+            vscode.commands.registerCommand("leetcode.refreshStudyPlans", () => leetCodeTreeDataProvider.refreshStudyPlans()),
+            vscode.commands.registerCommand("leetcode.editStudyPlans", () => studyPlanManager.editConfiguration()),
+            vscode.commands.registerCommand("leetcode.previewLocalMarkdown", previewLocalMarkdown),
+            vscode.commands.registerCommand("leetcode.openLocalMarkdown", openLocalMarkdown),
             vscode.commands.registerCommand("leetcode.testSolution", (uri?: vscode.Uri, target?: IJavaSolutionTarget) => {
                 TrackData.report({
                     event_key: `vscode_runCode`,
