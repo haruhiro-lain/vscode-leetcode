@@ -4,6 +4,7 @@ import * as crypto from "crypto";
 import * as MarkdownIt from "markdown-it";
 import { findLocalCompletion } from "./localCompletion";
 import { defaultBuiltinStudyPlans } from "./builtinStudyPlans";
+import { findLocalJavaFiles, localJavaCandidates } from "./localJavaFiles";
 
 export interface IStudyPlanEntry {
     id: string;
@@ -14,6 +15,7 @@ export interface IStudyPlanEntry {
     file?: string;
     completed?: boolean;
     builtin?: string;
+    javaFiles?: string[];
 }
 
 export interface IStudyPlanSource { file: string; workspaceRoot?: string; }
@@ -67,6 +69,7 @@ async function readItem(item: any, source: IStudyPlanSource, key: string, base: 
     const variants = ["builtin", "items", "source", "folder", "leetcode", "file"].filter((field) => item[field] !== undefined);
     if (variants.length !== 1) throw new Error("每个条目须且只能指定 builtin、items、source、folder、leetcode、file 之一。");
     const kind = variants[0];
+    if (item.java !== undefined && kind !== "file") throw new Error("java 关联仅适用于 file 本地题目条目。");
     if (kind === "leetcode") {
         const id = String(item.leetcode);
         if (!/^\d+$/.test(id)) throw new Error("leetcode 须为数字题号。");
@@ -83,7 +86,10 @@ async function readItem(item: any, source: IStudyPlanSource, key: string, base: 
         if (path.extname(file).toLowerCase() !== ".md") throw new Error("本地题目须为 .md 文件。");
         result.dependencies.add(file);
         // Keep explicit missing files visible so users can repair their path from the preview error.
-        return readLocalProblem(file, key, item.name);
+        const configuredJava = item.java === undefined ? [] : typeof item.java === "string" ? [item.java] : item.java;
+        if (!Array.isArray(configuredJava) || configuredJava.some((value) => typeof value !== "string" || !/\.java$/i.test(value))) throw new Error("java 须为 Java 文件路径或路径数组。");
+        const candidates = configuredJava.map((value) => resolveStudyPath(value, base, source.workspaceRoot));
+        return readLocalProblem(file, key, result, item.name, candidates);
     }
     const entry = makeEntry(key, item.name, "group");
     if (kind === "items") {
@@ -106,16 +112,19 @@ async function readItem(item: any, source: IStudyPlanSource, key: string, base: 
     return entry;
 }
 
-async function readLocalProblem(file: string, key: string, name?: string): Promise<IStudyPlanEntry> {
+async function readLocalProblem(file: string, key: string, result: IStudyPlanResult, name?: string, candidates: readonly string[] = []): Promise<IStudyPlanEntry> {
     let title = path.basename(file, path.extname(file));
     let completed = false;
+    let content = "";
     try {
-        const content = await fs.readFile(file, "utf8");
+        content = await fs.readFile(file, "utf8");
         const heading = /^#\s+(.+?)\s*#*\s*$/m.exec(content);
         if (heading) title = heading[1];
         completed = findLocalCompletion(content)?.checked || false;
     } catch (error) { if (error.code !== "ENOENT") throw error; }
-    return Object.assign(makeEntry(key, name || title, "markdown"), { file, completed });
+    for (const candidate of localJavaCandidates(file, candidates, content)) result.dependencies.add(candidate);
+    const javaFiles = await findLocalJavaFiles(file, candidates, content);
+    return Object.assign(makeEntry(key, name || title, "markdown"), { file, completed, javaFiles });
 }
 
 async function readFolder(folder: string, key: string, result: IStudyPlanResult, depth: number): Promise<IStudyPlanEntry[]> {
@@ -134,7 +143,7 @@ async function readFolder(folder: string, key: string, result: IStudyPlanResult,
             if (child.children.length) children.push(child);
         } else if (entry.isFile() && /\.md$/i.test(entry.name) && !/^readme\.md$/i.test(entry.name)) {
             result.dependencies.add(file);
-            children.push(await readLocalProblem(file, childKey));
+            children.push(await readLocalProblem(file, childKey, result));
         }
     }
     return children;
@@ -169,7 +178,9 @@ async function readMarkdownIndex(file: string, source: IStudyPlanSource, key: st
                 const childKey = key + ":link:" + sequence++;
                 let child: IStudyPlanEntry;
                 if (/\.md$/i.test(target)) {
-                    child = await readLocalProblem(target, childKey, link.name);
+                    const candidates = mdLinks.length === 1 ? localLinks.filter((value) => /\.java(?:[?#]|$)/i.test(value.href)).map((value) =>
+                        resolveStudyPath(decodeURIComponent(value.href.split(/[?#]/)[0]), path.dirname(file), source.workspaceRoot)) : [];
+                    child = await readLocalProblem(target, childKey, result, link.name, candidates);
                 } else {
                     const text = await fs.readFile(target, "utf8");
                     const match = /@lc\s+app=leetcode(?:\.cn|\.com)?\s+id=(\d+)\b/.exec(text);

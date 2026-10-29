@@ -27,8 +27,10 @@
                 "sourceMode": { "type": "string", "enum": ["links", "leetcode"], "default": "links", "description": "source 索引的链接范围：links 读取全文本地题目链接；leetcode 仅读取带 @lc 标记的 Java 力扣题解链接，忽略 Markdown 导航。" },
                 "folder": { "type": "string", "minLength": 1, "description": "递归导入 .md 题目目录，子目录作为分组，忽略 README.md。" },
                 "leetcode": { "oneOf": [{ "type": "string", "pattern": "^[0-9]+$" }, { "type": "integer", "minimum": 1 }], "description": "力扣数字题号。" },
-                "file": { "type": "string", "minLength": 1, "description": "单个本地 .md 题目路径。" }
+                "file": { "type": "string", "minLength": 1, "description": "单个本地 .md 题目路径。" },
+                "java": { "oneOf": [{ "type": "string", "pattern": "\\.[jJ][aA][vV][aA]$" }, { "type": "array", "items": { "type": "string", "pattern": "\\.[jJ][aA][vV][aA]$" } }], "description": "file 本地题目对应的 Java 文件路径或路径数组；相对 JSON 目录解析。也可自动关联索引同一行的 Java 链接、题面中的 Java 链接或同目录同名 Java 文件。" }
             },
+            "dependencies": { "java": ["file"] },
             "oneOf": [
                 { "required": ["name", "builtin"] },
                 { "required": ["name", "items"] },

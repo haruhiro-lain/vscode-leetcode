@@ -44,7 +44,7 @@ export class LeetCodeTreeDataProvider implements vscode.TreeDataProvider<LeetCod
                 label: studyPlanManager.getLabel(element),
                 tooltip: studyPlanManager.getTooltip(element),
                 collapsibleState: isLocal ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Collapsed,
-                contextValue: isLocal ? "local-markdown" : "studyplan",
+                contextValue: isLocal ? element.entry.javaFiles?.length ? "local-markdown-java" : "local-markdown" : "studyplan",
                 resourceUri: element.uri,
                 command: isLocal ? element.previewCommand : undefined,
                 iconPath: isLocal ? this.context.asAbsolutePath(path.join("resources", element.state === ProblemState.AC ? "check.png" : "blank.png")) : undefined,

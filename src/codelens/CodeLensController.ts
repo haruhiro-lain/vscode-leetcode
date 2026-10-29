@@ -3,14 +3,17 @@
 
 import { ConfigurationChangeEvent, Disposable, languages, workspace } from "vscode";
 import { customCodeLensProvider, CustomCodeLensProvider } from "./CustomCodeLensProvider";
+import { studyPlanManager } from "../studyPlans/studyPlanManager";
 
 class CodeLensController implements Disposable {
     private internalProvider: CustomCodeLensProvider;
     private registeredProvider: Disposable | undefined;
     private configurationChangeListener: Disposable;
+    private studyPlanChangeListener: Disposable;
 
     constructor() {
         this.internalProvider = customCodeLensProvider;
+        this.studyPlanChangeListener = studyPlanManager.onDidChange(() => this.internalProvider.refresh());
 
         this.configurationChangeListener = workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
             if (event.affectsConfiguration("leetcode.editor.shortcuts")) {
@@ -26,6 +29,7 @@ class CodeLensController implements Disposable {
             this.registeredProvider.dispose();
         }
         this.configurationChangeListener.dispose();
+        this.studyPlanChangeListener.dispose();
     }
 }
 

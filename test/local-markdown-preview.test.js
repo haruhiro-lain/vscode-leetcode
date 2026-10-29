@@ -16,13 +16,13 @@ class Uri {
     with(values) { const next = new Uri(this.url); if (values.fragment !== undefined) next.url.hash = values.fragment; if (values.query !== undefined) next.url.search = values.query; return next; }
     toString() { return this.url.toString(); }
 }
-let documents, panels, opened, external, errors, documentChanged, provider, warnings, refreshed, saved, applyResult, saveResult;
+let documents, panels, opened, external, errors, documentChanged, provider, warnings, refreshed, saved, applyResult, saveResult, javaFiles, mappedJava, commands, resolutions;
 const noopDisposable = () => ({ dispose() {} });
 const vscode = {
     Uri, ViewColumn: { One: 1, Two: 2 }, env: { appRoot: root, openExternal: async uri => external.push(uri.toString()) },
     Range: class { constructor(start, end) { this.start = start; this.end = end; } },
     WorkspaceEdit: class { constructor() { this.changes = []; } replace(uri, range, text) { this.changes.push({ uri, range, text }); } },
-    commands: { executeCommand: async command => { if (command === 'leetcode.refreshStudyPlans') refreshed++; } },
+    commands: { executeCommand: async (command, ...args) => { commands.push({ command, args }); if (command === 'leetcode.refreshStudyPlans') refreshed++; } },
     workspace: {
         onDidChangeConfiguration: noopDisposable,
         getConfiguration: () => ({ get: (_key, fallback) => fallback, inspect: () => ({ defaultValue: '' }) }),
@@ -46,7 +46,7 @@ const vscode = {
         showWarningMessage: message => warnings.push(message),
         createWebviewPanel: (type, title, column, options) => {
             let dispose, receive;
-            const panel = { type, title, column, options, reveal() {},
+            const panel = { type, title, column, options, reveal(viewColumn, preserveFocus) { this.column = { viewColumn, preserveFocus }; },
                 dispose() { if (dispose) dispose(); },
                 onDidDispose(fn, context) { dispose = () => fn.call(context); return noopDisposable(); },
                 webview: { html: '', cspSource: 'https://webview.example',
@@ -59,6 +59,8 @@ const vscode = {
     },
 };
 const mocks = { vscode, '../leetCodeChannel': { leetCodeChannel: { appendLine() {} } },
+    '../studyPlans/studyPlanManager': { studyPlanManager: { getJavaFiles: () => mappedJava } },
+    '../studyPlans/localJavaFiles': { findLocalJavaFiles: async (...args) => { resolutions.push(args); return [...javaFiles]; } },
     '../utils/osUtils': { isWindows: () => false }, '../utils/uiUtils': { promptHintMessage: async () => {}, openSettingsEditor() {} } };
 const originalLoad = Module._load;
 Module._load = function(name, parent, isMain) { return mocks[name] || originalLoad.call(this, name, parent, isMain); };
@@ -72,7 +74,22 @@ function document(file, text) {
         async save() { if (!saveResult) return false; this.isDirty = false; saved.push(this.uri.fsPath); return true; } };
     documents.set(uri.fsPath, doc); return doc;
 }
-beforeEach(() => { documents = new Map(); panels = []; opened = []; external = []; errors = []; warnings = []; refreshed = 0; saved = []; applyResult = true; saveResult = true; provider = new Preview(); });
+beforeEach(() => { documents = new Map(); panels = []; opened = []; external = []; errors = []; warnings = []; refreshed = 0; saved = []; applyResult = true; saveResult = true; javaFiles = []; mappedJava = []; commands = []; resolutions = []; provider = new Preview(); });
+
+test('editor descriptions open beside code with focus preserved, including refresh and local navigation', async () => {
+    const doc = document('one.md', '# 第一题'); document('two.md', '# 第二题');
+    await provider.show(doc.uri, [], true);
+    const panel = panels[0];
+    assert.deepEqual(panel.column, { viewColumn: 2, preserveFocus: true });
+    await panel.message({ command: 'refresh' });
+    assert.deepEqual(panel.column, { viewColumn: 2, preserveFocus: true });
+    await panel.message({ command: 'openLink', href: 'two.md' });
+    assert.deepEqual(panel.column, { viewColumn: 2, preserveFocus: true });
+    assert.match(panel.webview.html, /第二题/);
+    await provider.show(doc.uri);
+    assert.deepEqual(panel.column, { viewColumn: 1, preserveFocus: false });
+    assert.equal(panels.length, 1); provider.dispose();
+});
 
 test('local statements render tables, highlighted code, images and relative document links in the plugin panel', async () => {
     const doc = document('题目/一.md', '# 一道题\n\n| 输入 | 输出 |\n|---|---|\n| 1 | 2 |\n\n```java\nint n = 1;\n```\n\n![图](images/a%20b.png)\n[下一题](二.md#示例)\n\n## 示例\n正文');
@@ -189,5 +206,24 @@ test('marker examples inside code and blockquotes never produce extra interactiv
     await provider.show(doc.uri);
     assert.equal((panels[0].webview.html.match(/type="checkbox"/g) || []).length, 1);
     assert.doesNotMatch(panels[0].webview.html, /id="local-completion" checked/);
+    provider.dispose();
+});
+
+test('Start Coding is conditional on matching Java files and passes the current statement and association to the command', async () => {
+    const doc = document('question.md', '# 本地题');
+    await provider.show(doc.uri); const panel = panels[0];
+    assert.doesNotMatch(panel.webview.html, /id="solve"/);
+    javaFiles = [path.join(root, 'newsystem/Answer.java')];
+    await provider.show(doc.uri, javaFiles);
+    assert.match(panel.webview.html, /<button id="solve">开始做题<\/button>/);
+    assert.deepEqual(resolutions.at(-1)[1], javaFiles);
+    await panel.message({ command: 'startCoding', document: doc.uri.toString() });
+    assert.equal(commands.at(-1).command, 'leetcode.startLocalProblem');
+    assert.equal(commands.at(-1).args[0].fsPath, doc.uri.fsPath);
+    assert.deepEqual(commands.at(-1).args[1], javaFiles);
+    await panel.message({ command: 'startCoding', document: Uri.file(path.join(root, 'stale.md')).toString() });
+    assert.equal(commands.length, 1);
+    javaFiles = []; await panel.message({ command: 'refresh' });
+    assert.doesNotMatch(panel.webview.html, /id="solve"/);
     provider.dispose();
 });

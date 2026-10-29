@@ -5,6 +5,8 @@ import { ILeetCodeWebviewOption, LeetCodeWebview } from "./LeetCodeWebview";
 import { markdownEngine } from "./markdownEngine";
 import { localMarkdownHtml, localMarkdownTarget } from "./localMarkdownHtml";
 import { completionEdit, findLocalCompletion, withLocalCompletion } from "../studyPlans/localCompletion";
+import { findLocalJavaFiles } from "../studyPlans/localJavaFiles";
+import { studyPlanManager } from "../studyPlans/studyPlanManager";
 
 export class LocalMarkdownPreviewProvider extends LeetCodeWebview {
     protected readonly viewType = "leetcode.localMarkdown";
@@ -13,16 +15,22 @@ export class LocalMarkdownPreviewProvider extends LeetCodeWebview {
     private revision = 0;
     private fragment = "";
     private updatingCompletion = false;
+    private javaFiles: string[] = [];
+    private sideMode = false;
 
-    public async show(uri: vscode.Uri): Promise<void> {
+    public async show(uri: vscode.Uri, preferred?: readonly string[], sideMode: boolean = false): Promise<void> {
         const revision = ++this.revision;
         if (uri.scheme !== "file" || path.extname(uri.fsPath).toLowerCase() !== ".md") {
             vscode.window.showErrorMessage("请选择本地 .md 题目文件。"); return;
         }
         try {
             const document = await vscode.workspace.openTextDocument(uri.with({ fragment: "", query: "" }));
+            const candidates = preferred?.length ? preferred : studyPlanManager.getJavaFiles(uri.fsPath);
+            const javaFiles = await findLocalJavaFiles(uri.fsPath, candidates, document.getText());
             if (revision !== this.revision) return;
             this.document = document;
+            this.javaFiles = javaFiles;
+            this.sideMode = sideMode;
             this.fragment = uri.fragment;
             if (!this.changeListener) this.changeListener = vscode.workspace.onDidChangeTextDocument((event) => {
                 if (this.panel && this.document && event.document.uri.toString() === this.document.uri.toString()) {
@@ -42,7 +50,8 @@ export class LocalMarkdownPreviewProvider extends LeetCodeWebview {
     }
 
     protected getWebviewOption(): ILeetCodeWebviewOption {
-        return { title: `${path.basename(this.document!.uri.fsPath, ".md")}：题目描述`, viewColumn: vscode.ViewColumn.One };
+        return { title: `${path.basename(this.document!.uri.fsPath, ".md")}：题目描述`,
+            viewColumn: this.sideMode ? vscode.ViewColumn.Two : vscode.ViewColumn.One, preserveFocus: this.sideMode };
     }
 
     protected getWebviewOptions(): vscode.WebviewOptions {
@@ -77,21 +86,25 @@ export class LocalMarkdownPreviewProvider extends LeetCodeWebview {
             },
         });
         return localMarkdownHtml(body, markdownEngine.getStyles((uri) => webview.asWebviewUri(uri)), webview.cspSource,
-            crypto.randomBytes(18).toString("hex"), this.fragment, this.document!.uri.toString());
+            crypto.randomBytes(18).toString("hex"), this.fragment, this.document!.uri.toString(), this.javaFiles.length > 0);
     }
 
     protected async onDidReceiveMessage(message: { command: string; href?: string; checked?: boolean; document?: string }): Promise<void> {
         if (!this.document) return;
-        if (message.command === "setPassed") {
+        if (message.command === "startCoding") {
+            if (this.javaFiles.length && message.document === this.document.uri.toString()) {
+                await vscode.commands.executeCommand("leetcode.startLocalProblem", this.document.uri, this.javaFiles);
+            }
+        } else if (message.command === "setPassed") {
             if (typeof message.checked === "boolean" && message.document === this.document.uri.toString()) await this.setCompletion(message.checked);
         } else if (message.command === "openSource") await vscode.window.showTextDocument(this.document.uri);
-        else if (message.command === "refresh") await this.show(this.document.uri);
+        else if (message.command === "refresh") await this.show(this.document.uri, this.javaFiles, this.sideMode);
         else if (message.command === "openLink" && typeof message.href === "string") {
             const target = localMarkdownTarget(message.href, this.document.uri.fsPath);
             try {
                 if (target) {
                     const uri = vscode.Uri.file(target.file).with({ fragment: target.fragment });
-                    if (/\.md$/i.test(target.file)) await this.show(uri);
+                    if (/\.md$/i.test(target.file)) await this.show(uri, undefined, this.sideMode);
                     else await vscode.window.showTextDocument(uri.with({ fragment: "" }));
                 } else if (/^https?:|^mailto:/i.test(message.href)) await vscode.env.openExternal(vscode.Uri.parse(message.href));
             } catch (error) { vscode.window.showErrorMessage("无法打开题目链接：" + error.message); }

@@ -19,6 +19,8 @@ export class StudyPlanManager implements vscode.Disposable {
     private listeners: vscode.Disposable[] = [];
     private timer: NodeJS.Timeout | undefined;
     private revision = 0;
+    private readonly changeEmitter = new vscode.EventEmitter<void>();
+    public readonly onDidChange = this.changeEmitter.event;
 
     public initialize(refresh: () => Promise<void>): void {
         const schedule = (): void => {
@@ -38,6 +40,7 @@ export class StudyPlanManager implements vscode.Disposable {
         const result = await loadStudyPlans(sources);
         if (revision !== this.revision) return;
         this.result = result;
+        this.changeEmitter.fire();
         for (const error of result.errors) leetCodeChannel.appendLine("[自定义题单] " + error);
     }
 
@@ -69,6 +72,35 @@ export class StudyPlanManager implements vscode.Disposable {
         const sorted = explorerNodeManager.getNodesByIds(nodes.filter((item) => item.isProblem).map((item) => item.id));
         let index = 0;
         return nodes.map((item) => item.isProblem ? sorted[index++] : item);
+    }
+
+    public getJavaFiles(file: string): string[] {
+        const normalize = (value: string): string => process.platform === "win32" ? path.resolve(value).toLowerCase() : path.resolve(value);
+        const target = normalize(file);
+        const files: Map<string, string> = new Map();
+        const visit = (entry: IStudyPlanEntry): void => {
+            if (entry.kind === "group") for (const child of entry.children) visit(child);
+            else if (entry.kind === "markdown" && entry.file && normalize(entry.file) === target) {
+                for (const candidate of entry.javaFiles || []) files.set(normalize(candidate), candidate);
+            }
+        };
+        for (const entry of this.result.roots) visit(entry);
+        return Array.from(files.values());
+    }
+
+    public getLocalProblems(file: string): Array<{ file: string; name: string }> {
+        const normalize = (value: string): string => process.platform === "win32" ? path.resolve(value).toLowerCase() : path.resolve(value);
+        const target = normalize(file);
+        const problems: Map<string, { file: string; name: string }> = new Map();
+        const visit = (entry: IStudyPlanEntry): void => {
+            if (entry.kind === "group") for (const child of entry.children) visit(child);
+            else if (entry.kind === "markdown" && entry.file &&
+                (normalize(entry.file) === target || (entry.javaFiles || []).some((candidate) => normalize(candidate) === target))) {
+                problems.set(normalize(entry.file), { file: entry.file, name: entry.name });
+            }
+        };
+        for (const entry of this.result.roots) visit(entry);
+        return Array.from(problems.values());
     }
 
     public getTooltip(node: StudyPlanNode): string {
@@ -131,6 +163,7 @@ export class StudyPlanManager implements vscode.Disposable {
         if (this.timer) clearTimeout(this.timer);
         for (const listener of this.listeners) listener.dispose();
         this.listeners = [];
+        this.changeEmitter.dispose();
     }
 
     private isRelevant(file: string): boolean {

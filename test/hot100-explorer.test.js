@@ -12,7 +12,7 @@ Module._load = function(name, parent, isMain) {
     const mocks = {
         vscode: { env: { appName: 'VS Code', uriScheme: 'vscode' },
             workspace: { get workspaceFolders() { return [{ uri: { fsPath: root } }]; }, getConfiguration: () => ({ get: (_key, fallback) => fallback }) },
-            EventEmitter: class { constructor() { this.event = () => {}; } fire() {} },
+            EventEmitter: class { constructor() { this.event = () => {}; } fire() {} dispose() {} },
             Uri: { from: fields => fields }, TreeItemCollapsibleState: { None: 0, Collapsed: 1 },
         },
         '../commands/list': { listProblems: async () => problems },

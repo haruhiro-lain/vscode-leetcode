@@ -3,6 +3,18 @@ All notable changes to the "leetcode" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.22.2] 本地题代码中的题目描述
+### Added
+- 自定义本地题单关联的 Java 文件及 Markdown 源文件显示题目描述快捷入口，使用插件题面视图展示本地内容。
+- Java 入口位于首个 Solution 前一行；同一代码关联多个题面时可按路径选择，并保留当前代码作为开始做题的目标。
+- 保存题单或关联文件后自动更新编辑器入口，力扣题目的在线描述与提交测试保持原有行为。
+
+## [0.22.1] 本地题开始做题
+### Added
+- 本地 Markdown 题目有对应 Java 文件时，在题目预览及列表旁显示开始做题，直接打开已有代码。
+- 自动关联题单索引同一行的 Java 链接、题面内 Java 链接或同目录同名 Java 文件，并支持通过 java 字段显式配置。
+- 跨卷题面保留所选记录的 Java 关联，多候选时按相对路径选择；文件缺失时隐藏或提示检查。
+
 ## [0.22.0] 默认分类与自定义题单统一排序
 ### Added
 - 题单 JSON 支持 builtin 引用原有全部题目、难度、标签、公司和收藏分类。

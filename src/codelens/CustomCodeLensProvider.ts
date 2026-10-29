@@ -6,6 +6,7 @@ import { explorerNodeManager } from "../explorer/explorerNodeManager";
 import { LeetCodeNode } from "../explorer/LeetCodeNode";
 import { getEditorShortcuts } from "../utils/settingUtils";
 import { findJavaSolutions } from "../utils/javaSolutionUtils";
+import { studyPlanManager } from "../studyPlans/studyPlanManager";
 
 export class CustomCodeLensProvider implements vscode.CodeLensProvider {
 
@@ -28,7 +29,15 @@ export class CustomCodeLensProvider implements vscode.CodeLensProvider {
         const content: string = document.getText();
         const matchResult: RegExpMatchArray | null = content.match(/@lc app=.* id=(.*) lang=.*/);
         if (!matchResult) {
-            return undefined;
+            if (shortcuts.indexOf("description") < 0 || !["java", "markdown"].includes(document.languageId) ||
+                !studyPlanManager.getLocalProblems(document.uri.fsPath).length) return undefined;
+            const localSolutions = document.languageId === "java" ? findJavaSolutions(content) : [];
+            const line = localSolutions.length ? Math.max(0, document.positionAt(localSolutions[0].start).line - 1) : 0;
+            return [new vscode.CodeLens(new vscode.Range(line, 0, line, 0), {
+                title: "题目描述",
+                command: "leetcode.previewLocalMarkdown",
+                arguments: [document.uri, true],
+            })];
         }
         const nodeId: string | undefined = matchResult[1];
         let node: LeetCodeNode | undefined;

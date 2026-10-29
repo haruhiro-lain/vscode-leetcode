@@ -1,6 +1,6 @@
 # LeetCode-CN：安装与共享工作区设置
 
-当前版本 **0.22.0**，独立扩展标识为 **`haruhiro-lain.leetcode-cn`**，插件源码分支为 `feat/personalization`。VSIX 文件名为 `LeetCode-CN-0.22.0.vsix`。
+当前版本 **0.22.2**，独立扩展标识为 **`haruhiro-lain.leetcode-cn`**，插件源码分支为 `feat/personalization`。VSIX 文件名为 `LeetCode-CN-0.22.2.vsix`。
 
 侧边栏视图标题统一为 LeetCode-CN。顶部按钮从左到右为：搜索题目、随机一题、刷新题目、自定义题单、全部折叠。“切换站点”位于“视图和更多操作（…）”菜单；登录、退出及题目排序也在该菜单中，登录/退出入口继续随账号状态切换。随机一题使用音乐播放器常见的交叉箭头随机播放图标，适配浅色与深色主题；自定义题单使用带加号的文件图标。全部折叠沿用 VS Code 原生按钮。
 
@@ -88,6 +88,24 @@ Hot100 与代码随想录、华为 OD 一样由工作区题单 JSON 配置管理
 点击本地题目，或在 Markdown 编辑器/资源管理器中执行 **预览本地题目**，在插件题目面板中查看表格、代码高亮和图片。相对图片从题面目录解析；相对 Markdown 链接在同一题目面板打开，Java 等文件链接打开编辑器，网页链接打开浏览器。工具栏可打开源文件或刷新；编辑器中的未保存题面也会更新预览。本地文档不执行 HTML 脚本或命令链接，不会发送到力扣判题；已有 Java 题解可继续从代码入口测试、提交。
 
 算法工作空间已提供题单配置，接入“Hot100”、“代码随想录”和“华为 OD（新系统 / 双机位 C 卷）”。OD 显示本地文件已有内容，待补充题面仍保留其原有提示，不代表插件已获取完整题面。
+
+### 本地题开始做题
+
+自定义本地题单关联的 Java 文件中，在首个 `Solution` 类前一行显示“题目描述”（没有 `Solution` 时位于文件顶部）；Markdown 题面源文件顶部也有相同入口。点击后与力扣代码中的描述入口一致，在右侧打开插件题面视图并保留编辑器焦点，渲染本地 Markdown 的图片、链接和通过勾选框，Java 中的描述入口会将当前代码作为题面“开始做题”的返回目标。多份题面关联同一 Java 时可选择路径。入口遵循 `leetcode.editor.shortcuts` 的 `description` 设置；修改题单后自动更新，不需要登录。带 `@lc` 标记的力扣题目继续显示在线题面。
+
+本地 Markdown 题目有对应的 Java 文件时，题目预览工具栏和题目列表旁显示“开始做题”入口，点击直接打开已有 Java 文件，不覆盖代码，不下载力扣模板。没有有效 Java 文件时隐藏该入口。
+
+关联优先使用题单索引同一行的 Java 链接，或 `file` 条目的 `java` 配置。没有明确关联时，查找题面中的本地 Java 链接及同目录同名 `.java` 文件。链接和路径都须指向实际文件；代码块里的示例链接不参与匹配。可手动配置：
+
+```json
+{
+    "name": "本地练习",
+    "file": "${workspaceFolder}/questions/problem.md",
+    "java": "${workspaceFolder}/code/Problem.java"
+}
+```
+
+`java` 也可为路径数组，相对路径从 JSON 所在目录解析。OD 索引已包含每条记录的 Java 链接，按所选卷直接打开对应文件；从资源管理器直接预览跨卷共用题面时，多个候选会显示相对路径供选择，取消选择保持原状。新增或删除代码后刷新题目列表/本地预览可更新入口。
 
 ### 默认分类与完整列表排序
 
@@ -185,5 +203,5 @@ Markdown 比 Java 更适合作为唯一状态来源：一题一份题面、支�
 npm ci --registry=https://registry.npmjs.org --no-audit --no-fund
 npm run lint
 npm test
-npm exec --yes --package=@vscode/vsce@4.0.0 -- vsce package --out LeetCode-CN-0.22.0.vsix
+npm exec --yes --package=@vscode/vsce@4.0.0 -- vsce package --out LeetCode-CN-0.22.2.vsix
 ```

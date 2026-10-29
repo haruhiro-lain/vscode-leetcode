@@ -48,6 +48,7 @@ test('Markdown indices preserve heading hierarchy and row order without duplicat
     assert.deepEqual(leaves.map(entry => entry.problemId), [undefined, '704', '704']);
     assert.equal(new Set(leaves.map(entry => entry.id)).size, 3);
     assert.equal(leaves[0].file, path.join(root, 'docs/a b.md'));
+    assert.deepEqual(leaves[0].javaFiles, [path.join(root, 'code/128.java')]);
 });
 
 test('folder plans recursively group Markdown files, ignore README and update when files change', async () => {
@@ -123,4 +124,17 @@ test('invalid, nested, duplicate or ambiguous built-in definitions report errors
     assert.equal(result.errors.length, 4);
     assert.deepEqual(result.roots.map(entry => entry.name), ['全部题目', '分组']);
     assert.deepEqual(result.roots[1].children, []);
+});
+
+test('local Java bindings use JSON-relative paths and remain associated with the selected index row', async () => {
+    await write('docs/shared.md', '# 共用题面');
+    const c = await write('code/c/Answer.java', 'class C {}'), n = await write('code/new/Answer.java', 'class N {}');
+    await write('docs/index.md', '# 索引\n## C卷\n| 题目 | 代码 |\n|---|---|\n| [题目](shared.md) | [Java](../code/c/Answer.java) |\n## 新系统\n| 题目 | 代码 |\n|---|---|\n| [题目](shared.md) | [Java](../code/new/Answer.java) |');
+    const result = await load([{ id: 'index', name: '目录', source: '../docs/index.md' },
+        { id: 'manual', name: '自选', items: [{ file: '../docs/shared.md', java: ['../code/new/Answer.java'] }] }]);
+    assert.deepEqual(result.errors, []);
+    assert.deepEqual(flatten(result.roots).map(entry => entry.javaFiles), [[c], [n], [n]]);
+    assert.ok(result.dependencies.has(c)); assert.ok(result.dependencies.has(n));
+    const invalid = await load([{ id: 'bad', name: '错误', items: [{ file: '../docs/shared.md', java: 123 }] }]);
+    assert.equal(invalid.errors.length, 1);
 });

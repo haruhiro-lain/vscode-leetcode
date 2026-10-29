@@ -30,7 +30,7 @@ import { IJavaSolutionTarget } from "./utils/javaSolutionUtils";
 import { migrateLegacyState } from "./utils/legacyStateMigration";
 import { studyPlanManager } from "./studyPlans/studyPlanManager";
 import { localMarkdownPreviewProvider } from "./webview/localMarkdownPreviewProvider";
-import { openLocalMarkdown, previewLocalMarkdown } from "./commands/localProblems";
+import { openLocalMarkdown, previewLocalMarkdown, startLocalProblem } from "./commands/localProblems";
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     try {
@@ -96,6 +96,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             vscode.commands.registerCommand("leetcode.editStudyPlans", () => studyPlanManager.editConfiguration()),
             vscode.commands.registerCommand("leetcode.previewLocalMarkdown", previewLocalMarkdown),
             vscode.commands.registerCommand("leetcode.openLocalMarkdown", openLocalMarkdown),
+            vscode.commands.registerCommand("leetcode.startLocalProblem", startLocalProblem),
             vscode.commands.registerCommand("leetcode.testSolution", (uri?: vscode.Uri, target?: IJavaSolutionTarget) => {
                 TrackData.report({
                     event_key: `vscode_runCode`,

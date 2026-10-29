@@ -10,7 +10,7 @@ const vscode = {
     env: { appName: 'VS Code', uriScheme: 'vscode' },
     Uri: { file: fsPath => ({ fsPath, scheme: 'file', toString: () => fsPath }), from: fields => fields },
     TreeItemCollapsibleState: { None: 0, Collapsed: 1 },
-    EventEmitter: class { constructor() { this.event = () => {}; } fire() {} },
+    EventEmitter: class { constructor() { this.event = () => {}; } fire() {} dispose() {} },
     workspace: {
         get workspaceFolders() { return [{ uri: { fsPath: root } }]; },
         getConfiguration: () => ({ get: (key, fallback) => key === 'studyPlanFiles' ? planFiles ?? fallback : fallback }),
@@ -85,6 +85,26 @@ test('signed-out users can browse local statements and modules without remote pr
     assert.deepEqual(view.getChildren(module), []);
     assert.equal(view.getTreeItem(local).command.command, 'leetcode.previewLocalMarkdown');
     assert.match(view.getTreeItem(roots[1]).tooltip, /总题数：4/);
+});
+
+test('local descriptions resolve Java back to unique statements, independently of login and hidden progress', async () => {
+    const java = path.join(root, 'Answer.java'), md = path.join(root, 'local.md'), other = path.join(root, 'other.md');
+    await fs.writeFile(java, 'class Answer {}');
+    await fs.writeFile(other, '# 第二题');
+    await configure([{ id: 'local', name: '本地题单', items: [
+        { name: '第一题', file: md, java }, { name: '第一题', file: md, java },
+        { name: '第二题', file: other, java },
+    ] }]);
+    user = undefined; hidden = true; await studyPlans.refresh();
+    assert.deepEqual(studyPlans.getLocalProblems(java), [{ file: md, name: '第一题' }, { file: other, name: '第二题' }]);
+    assert.deepEqual(studyPlans.getLocalProblems(md), [{ file: md, name: '第一题' }]);
+    assert.deepEqual(studyPlans.getLocalProblems(path.join(root, 'Unknown.java')), []);
+    if (process.platform === 'win32') assert.deepEqual(studyPlans.getLocalProblems(java.toUpperCase()), studyPlans.getLocalProblems(java));
+    await configure([{ id: 'local', name: '本地题单', items: [{ name: '第二题', file: other, java }] }]);
+    await studyPlans.refresh();
+    assert.deepEqual(studyPlans.getLocalProblems(java), [{ file: other, name: '第二题' }]);
+    await fs.unlink(java); await studyPlans.refresh();
+    assert.deepEqual(studyPlans.getLocalProblems(java), []);
 });
 
 test('hide-solved filters custom modules while keeping local statements visible', async () => {
@@ -195,4 +215,19 @@ test('multiple JSON files preserve their declared order and reuse each built-in 
     ] }));
     planFiles = ['second.json', 'first.json']; await studyPlans.refresh();
     assert.deepEqual(provider().getChildren().map(node => node.name), ['题单二', '另一个全部题目', '收藏', '题单一']);
+});
+
+test('local rows with existing Java files expose Start Coding and shared statement lookup preserves all associations', async () => {
+    const first = path.join(root, 'C.java'), second = path.join(root, 'N.java');
+    await fs.writeFile(first, 'class C {}'); await fs.writeFile(second, 'class N {}');
+    await configure([{ id: 'local', name: '本地', items: [
+        { file: '${workspaceFolder}/local.md', java: first },
+        { file: '${workspaceFolder}/local.md', java: second },
+    ] }]); await studyPlans.refresh();
+    const view = provider(), nodes = view.getChildren(studyPlans.getRoots()[0]);
+    assert.equal(view.getTreeItem(nodes[0]).contextValue, 'local-markdown-java');
+    assert.deepEqual(nodes.map(node => node.entry.javaFiles), [[first], [second]]);
+    assert.deepEqual(studyPlans.getJavaFiles(path.join(root, 'local.md')), [first, second]);
+    await fs.unlink(first); await studyPlans.refresh();
+    assert.equal(view.getTreeItem(view.getChildren(studyPlans.getRoots()[0])[0]).contextValue, 'local-markdown');
 });

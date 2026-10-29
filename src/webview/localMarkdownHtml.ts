@@ -16,7 +16,7 @@ export function escapeLocalHtml(value: string): string {
     return value.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character]!));
 }
 
-export function localMarkdownHtml(body: string, styles: string, cspSource: string, nonce: string, fragment: string, documentUri: string = ""): string {
+export function localMarkdownHtml(body: string, styles: string, cspSource: string, nonce: string, fragment: string, documentUri: string = "", hasJava: boolean = false): string {
     const anchor = JSON.stringify(fragment).replace(/</g, "\\u003c");
     const document = JSON.stringify(documentUri).replace(/</g, "\\u003c");
     return `<!DOCTYPE html><html><head>
@@ -27,12 +27,14 @@ export function localMarkdownHtml(body: string, styles: string, cspSource: strin
         .local-toolbar { position: sticky; top: 0; display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 0; background: var(--vscode-editor-background); }
         button { color: var(--vscode-button-foreground); background: var(--vscode-button-background); border: 0; padding: 0.35rem 0.7rem; cursor: pointer; }
         button:hover { background: var(--vscode-button-hoverBackground); } h1,h2,h3,h4,h5,h6 { scroll-margin-top: 4rem; }</style>
-        </head><body><div class="local-toolbar"><span>本地题目</span><button id="source">打开源文件</button><button id="refresh">刷新</button></div>
+        </head><body><div class="local-toolbar"><span>本地题目</span>${hasJava ? '<button id="solve">开始做题</button>' : ""}<button id="source">打开源文件</button><button id="refresh">刷新</button></div>
         ${body}
         <script nonce="${nonce}">
         const vscode = acquireVsCodeApi();
         document.getElementById('source').onclick = () => vscode.postMessage({command: 'openSource'});
         document.getElementById('refresh').onclick = () => vscode.postMessage({command: 'refresh'});
+        const solve = document.getElementById('solve');
+        if (solve) solve.onclick = () => vscode.postMessage({command: 'startCoding', document: ${document}});
         const completion = document.getElementById('local-completion');
         if (completion) completion.onchange = () => {
             completion.disabled = true;

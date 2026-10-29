@@ -28,6 +28,8 @@ let executionError;
 let userStatus = 1;
 let invalidated = 0;
 let authenticationOutcome = 'expired';
+let localProblems = [];
+let shortcuts = ['submit', 'test', 'description'];
 const warnings = [];
 const commands = [];
 const vscode = {
@@ -56,7 +58,8 @@ const mocks = {
     './workspaceUtils': { getActiveFilePath: async () => { saved++; return uri.fsPath; } },
     './wslUtils': { useWsl: () => false },
     '../utils/wslUtils': { useWsl: () => false },
-    '../utils/settingUtils': { getEditorShortcuts: () => ['submit', 'test', 'description'] },
+    '../utils/settingUtils': { getEditorShortcuts: () => shortcuts },
+    '../studyPlans/studyPlanManager': { studyPlanManager: { getLocalProblems: () => localProblems } },
     '../explorer/explorerNodeManager': { explorerNodeManager: { getNodeById: () => undefined } },
     '../explorer/LeetCodeTreeDataProvider': { leetCodeTreeDataProvider: { refresh() {} } },
     '../leetCodeManager': { leetCodeManager: {
@@ -122,6 +125,31 @@ class LeetCode704 {
         ['leetcode.submitSolution', 3], ['leetcode.testSolution', 3],
         ['leetcode.submitSolution', 5], ['leetcode.testSolution', 5],
     ]);
+});
+
+test('associated local Java and Markdown offer description previews without remote submit actions', () => {
+    const localSource = 'class OD123 {\n    // solve here\n    class Solution {}\n    class Solution2 {}\n}';
+    const localDocument = { ...document, getText: () => localSource,
+        positionAt: offset => ({ line: localSource.slice(0, offset).split('\n').length - 1 }) };
+    try {
+        localProblems = [{ file: 'C:/practice/problems/local.md', name: '本地题' }];
+        const lenses = provider.provideCodeLenses(localDocument);
+        assert.equal(lenses.length, 1);
+        assert.equal(lenses[0].command.title, '题目描述');
+        assert.equal(lenses[0].command.command, 'leetcode.previewLocalMarkdown');
+        assert.deepEqual(lenses[0].command.arguments, [uri, true]);
+        assert.equal(lenses[0].range.start.line, 1);
+        const noSolution = provider.provideCodeLenses({ ...localDocument, getText: () => 'class Main {}' });
+        assert.equal(noSolution[0].range.start.line, 0);
+        const markdown = provider.provideCodeLenses({ ...localDocument, languageId: 'markdown', getText: () => '# 本地题' });
+        assert.equal(markdown[0].range.start.line, 0);
+        // Genuine LeetCode metadata keeps its online description and submit/test commands.
+        assert.equal(provider.provideCodeLenses(document)[0].command.command, 'leetcode.previewProblem');
+        shortcuts = ['submit', 'test'];
+        assert.equal(provider.provideCodeLenses(localDocument), undefined);
+        shortcuts = ['description']; localProblems = [];
+        assert.equal(provider.provideCodeLenses(localDocument), undefined);
+    } finally { localProblems = []; shortcuts = ['submit', 'test', 'description']; }
 });
 
 test('submit/test use exactly the clicked solution and remove temporary files on success or error', async () => {
