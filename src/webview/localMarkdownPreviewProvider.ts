@@ -87,7 +87,7 @@ export class LocalMarkdownPreviewProvider extends LeetCodeWebview {
             },
         });
         return localMarkdownHtml(body, markdownEngine.getStyles((uri) => webview.asWebviewUri(uri)), webview.cspSource,
-            crypto.randomBytes(18).toString("hex"), this.fragment, this.document!.uri.toString(), this.javaFiles.length > 0,
+            crypto.randomBytes(18).toString("hex"), this.fragment, this.document!.uri.toString(),
             localHydroSubmissionUrl(content, file) !== undefined);
     }
 

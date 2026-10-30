@@ -222,13 +222,15 @@ test('marker examples inside code and blockquotes never produce extra interactiv
     provider.dispose();
 });
 
-test('Start Coding is conditional on matching Java files and passes the current statement and association to the command', async () => {
+test('local previews start with the statement and omit the redundant toolbar even with matching Java files', async () => {
     const doc = document('question.md', '# 本地题');
     await provider.show(doc.uri); const panel = panels[0];
     assert.doesNotMatch(panel.webview.html, /id="solve"/);
     javaFiles = [path.join(root, 'newsystem/Answer.java')];
     await provider.show(doc.uri, javaFiles);
-    assert.match(panel.webview.html, /<button id="solve">开始做题<\/button>/);
+    assert.match(panel.webview.html, /<body>\s*<h1\b/);
+    assert.doesNotMatch(panel.webview.html, /local-toolbar|id="(?:solve|source|refresh)"|打开源文件|开始做题/);
+    assert.doesNotMatch(panel.webview.html, /getElementById\('(?:source|refresh|solve)'\)/);
     assert.deepEqual(resolutions.at(-1)[1], javaFiles);
     await panel.message({ command: 'startCoding', document: doc.uri.toString() });
     assert.equal(commands.at(-1).command, 'leetcode.startLocalProblem');

@@ -3,6 +3,11 @@ All notable changes to the "leetcode" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.22.4] 精简本地题面预览
+### Changed
+- 去掉本地题面预览顶部的“本地题目”及“开始做题 / 打开源文件 / 刷新”工具栏，直接展示题目正文。
+- 清理对应脚本与顶部锚点留白，保留题目列表的开始做题、正文通过勾选及底部 OD 提交入口。
+
 ## [0.22.3] 本地 OD 题面与提交入口
 ### Added
 - 本地题面有与文件名一致的 HydroOJ 题号时，在正文底部显示“提交代码”按钮，使用系统浏览器打开对应题目的提交页面。

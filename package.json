@@ -2,7 +2,7 @@
     "name": "leetcode-cn",
     "displayName": "LeetCode-CN",
     "description": "在 VS Code 中浏览力扣题目、编写题解、运行测试、提交代码并查看中文判题结果。",
-    "version": "0.22.3",
+    "version": "0.22.4",
     "author": "haruhiro-lain",
     "publisher": "haruhiro-lain",
     "license": "MIT",
