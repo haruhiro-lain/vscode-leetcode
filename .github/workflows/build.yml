@@ -5,6 +5,10 @@ on:
     branches: [master, feat/personalization]
   pull_request:
     branches: [master, feat/personalization]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -19,7 +23,52 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Validate release metadata
+        id: package
+        run: node scripts/publish-release.cjs metadata
       - run: npm ci --registry=https://registry.npmjs.org --no-audit --no-fund
       - run: npm run lint
       - run: npm test
-      - run: npm exec --yes --package=@vscode/vsce@4.0.0 -- vsce package
+      - name: Package VSIX
+        run: npm exec --yes --package=@vscode/vsce@4.0.0 -- vsce package --out ${{ steps.package.outputs.filename }}
+      - name: Keep the tested release package
+        if: >-
+          matrix.os == 'ubuntu-latest' &&
+          github.repository == 'haruhiro-lain/vscode-leetcode' &&
+          github.ref == 'refs/heads/feat/personalization' &&
+          (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        uses: actions/upload-artifact@v7
+        with:
+          name: leetcode-cn-vsix
+          path: ${{ steps.package.outputs.filename }}
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    if: >-
+      github.repository == 'haruhiro-lain/vscode-leetcode' &&
+      github.ref == 'refs/heads/feat/personalization' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    concurrency:
+      group: leetcode-cn-release
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v8
+        with:
+          name: leetcode-cn-vsix
+          path: dist
+      - name: Publish the new version and installer
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { publishRelease } = require('./scripts/publish-release.cjs');
+            await publishRelease({ github, context, core });

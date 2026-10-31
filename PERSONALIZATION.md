@@ -1,8 +1,24 @@
 # LeetCode-CN：安装与共享工作区设置
 
-当前版本 **0.22.8**，独立扩展标识为 **`haruhiro-lain.leetcode-cn`**，插件源码分支为 `feat/personalization`。VSIX 文件名为 `LeetCode-CN-0.22.8.vsix`。
+当前版本 **0.22.9**，独立扩展标识为 **`haruhiro-lain.leetcode-cn`**，插件源码分支为 `feat/personalization`。VSIX 文件名为 `LeetCode-CN-0.22.9.vsix`。
 
 侧边栏视图标题统一为 LeetCode-CN。顶部按钮从左到右为：搜索题目、随机一题、刷新题目、自定义题单、全部折叠。“切换站点”位于“视图和更多操作（…）”菜单；登录、退出及题目排序也在该菜单中，登录/退出入口继续随账号状态切换。随机一题使用音乐播放器常见的交叉箭头随机播放图标，适配浅色与深色主题；自定义题单使用带加号的文件图标。全部折叠沿用 VS Code 原生按钮。
+
+## 直接下载安装包
+
+打开 [GitHub Releases](https://github.com/haruhiro-lain/vscode-leetcode/releases/latest)，在 Assets 中下载 `LeetCode-CN-版本号.vsix`。在 VS Code 扩展页面右上角“…”中选择“从 VSIX 安装…”，或执行：
+
+```powershell
+code --install-extension LeetCode-CN-0.22.9.vsix --force
+```
+
+安装后执行“开发人员: 重新加载窗口”。每台电脑仍需安装 Node.js 22.13 或以上，但无需克隆插件仓库、安装 npm 依赖或自行打包。后续升级重新下载最新版安装包即可，账号和工作区配置继续使用本机现有数据。第一次从原版切换请参照下节，移除旧标识，避免重复入口。
+
+## 自动发布
+
+将 `package.json` 和 `package-lock.json` 的根版本及 `packages[""].version` 同步升级，并在 `CHANGELOG.md` 增加对应版本记录，提交推送到 `feat/personalization`。CI 在 Windows 和 Linux 上完成 lint、测试与 VSIX 打包；两边均通过后自动创建 `v版本号` 标签，并向 GitHub Releases 上传 `LeetCode-CN-版本号.vsix` 及同名 `.sha256` 校验文件。发布说明取自本版本的更新记录，并附安装方法。
+
+每个版本只发布一次：普通代码推送仍运行检查，已发布版本跳过发布且不替换安装包。上传失败时保留草稿，可在 Actions 中重新运行失败任务；重试须使用相同提交，版本内容改变则应升级版本号。PR、其他分支和其他 fork 不会发布安装包。发布使用 GitHub Actions 自带的 `GITHUB_TOKEN`，无需另存个人令牌；仅发布任务申请仓库内容写权限。
 
 ## 从旧扩展切换
 

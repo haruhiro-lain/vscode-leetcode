@@ -3,6 +3,12 @@ All notable changes to the "leetcode" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.22.9] 自动发布安装包
+### Added
+- 定制分支推送新版本后，Windows 与 Linux 校验通过即自动发布 GitHub Release，提供 VSIX 安装包、SHA256 校验文件与安装说明。
+- 支持重复推送跳过已发布版本、失败草稿重试及版本与提交一致性校验。
+- 增加 Releases 下载入口，另一台电脑无需拉取插件源码即可安装或更新。
+
 ## [0.22.8] 精简随机题单选项说明
 ### Changed
 - 去掉随机抽题范围说明中的括号补充内容和“力扣原有分类”标签，题单范围及抽题逻辑保持原样。

@@ -12,3 +12,6 @@ tslint.json
 ACKNOWLEDGEMENTS.md
 docs
 .github
+
+scripts/publish-release.cjs
+dist/**

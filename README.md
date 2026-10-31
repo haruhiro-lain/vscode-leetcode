@@ -1,6 +1,8 @@
 # LeetCode-CN
 
-个人定制的力扣中文插件，独立扩展标识为 **`haruhiro-lain.leetcode-cn`**，基于 [LeetCode-OpenSource/vscode-leetcode](https://github.com/LeetCode-OpenSource/vscode-leetcode)，保留原 MIT 许可。定制分支为 `feat/personalization`，当前版本为 **0.22.8**。安装与旧版登录迁移见 [定制说明](PERSONALIZATION.md)；算法工作空间使用 `haruhiroLain_work` 的 `main` 分支。
+个人定制的力扣中文插件，独立扩展标识为 **`haruhiro-lain.leetcode-cn`**，基于 [LeetCode-OpenSource/vscode-leetcode](https://github.com/LeetCode-OpenSource/vscode-leetcode)，保留原 MIT 许可。定制分支为 `feat/personalization`，当前版本为 **0.22.9**。安装与旧版登录迁移见 [定制说明](PERSONALIZATION.md)；算法工作空间使用 `haruhiroLain_work` 的 `main` 分支。
+
+直接安装：从 [GitHub Releases](https://github.com/haruhiro-lain/vscode-leetcode/releases/latest) 下载最新的 `LeetCode-CN-版本号.vsix`，在 VS Code 扩展菜单选择“从 VSIX 安装…”，然后重新加载窗口。无需克隆插件源码或在本机构建，运行仍需 Node.js 22.13 或以上。首次从原版切换及源码安装方式见 [定制说明](PERSONALIZATION.md)。
 
 > Solve LeetCode problems in VS Code
 
