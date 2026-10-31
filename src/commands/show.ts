@@ -4,6 +4,7 @@
 import { localizeLabel } from "../utils/labelUtils";
 import * as _ from "lodash";
 import * as path from "path";
+import * as fs from "fs-extra";
 import * as unescapeJS from "unescape-js";
 import * as vscode from "vscode";
 import { explorerNodeManager } from "../explorer/explorerNodeManager";
@@ -11,7 +12,7 @@ import { LeetCodeNode } from "../explorer/LeetCodeNode";
 import { leetCodeChannel } from "../leetCodeChannel";
 import { leetCodeExecutor } from "../leetCodeExecutor";
 import { leetCodeManager } from "../leetCodeManager";
-import { Endpoint, IProblem, IQuickItemEx, languages, langExt, PREMIUM_URL_CN, PREMIUM_URL_GLOBAL, ProblemState } from "../shared";
+import { Category, Endpoint, IProblem, IQuickItemEx, languages, langExt, PREMIUM_URL_CN, PREMIUM_URL_GLOBAL, ProblemState } from "../shared";
 import { genFileExt, genFileName, getNodeIdFromFile } from "../utils/problemUtils";
 import * as settingUtils from "../utils/settingUtils";
 import { IDescriptionConfiguration } from "../utils/settingUtils";
@@ -32,6 +33,11 @@ import { globalState } from "../globalState";
 import { javaIdentifier } from "../utils/javaTemplateUtils";
 import { handleCommandError } from "../utils/commandErrorUtils";
 import { findExistingProblemFiles } from "../utils/existingProblemUtils";
+import { studyPlanManager } from "../studyPlans/studyPlanManager";
+import { StudyPlanNode } from "../studyPlans/StudyPlanNode";
+import { nativeScopeValues, randomCandidates, randomScopes, selectedPlans } from "../utils/randomProblemUtils";
+import { findLocalJavaFiles } from "../studyPlans/localJavaFiles";
+import { previewLocalMarkdown, startLocalProblem } from "./localProblems";
 
 export async function previewProblem(input: IProblem | vscode.Uri, isSideMode: boolean = false): Promise<void> {
     let node: IProblem;
@@ -71,9 +77,63 @@ export async function previewProblem(input: IProblem | vscode.Uri, isSideMode: b
 }
 
 export async function pickOne(): Promise<void> {
-    const problems: IProblem[] = await list.listProblems();
-    const randomProblem: IProblem = problems[Math.floor(Math.random() * problems.length)];
-    await showProblemInternal(randomProblem);
+    try {
+        await studyPlanManager.refresh();
+        const roots = studyPlanManager.getRoots().map((node) => ({ id: node.id, name: node.name, entry: node instanceof StudyPlanNode ? node.entry : undefined }));
+        const scope = await vscode.window.showQuickPick(randomScopes(roots), {
+            placeHolder: "请选择随机抽题的题单或分类", matchOnDescription: true, ignoreFocusOut: true,
+        });
+        if (!scope) return;
+        const plans = roots.filter((node) => node.entry?.kind === "group").map((node) => node.entry!);
+        const entries = selectedPlans(scope, plans);
+        let problems: IProblem[] = [];
+        if (scope.all || scope.builtin || entries.some((entry) => entry.kind === "leetcode")) {
+            if (!leetCodeManager.getUser()) { promptForSignIn(); return; }
+            problems = explorerNodeManager.getAllNodes();
+            const cached = new Map(problems.map((problem) => [problem.id, problem] as [string, IProblem]));
+            for (const entry of entries) if (entry.problemId && !cached.has(entry.problemId)) {
+                const problem = explorerNodeManager.getNodeById(entry.problemId, true);
+                if (problem) cached.set(problem.id, problem);
+            }
+            problems = Array.from(cached.values());
+            if (!problems.length || entries.some((entry) => entry.problemId && !cached.has(entry.problemId))) problems = await list.listProblems();
+        }
+        const premium = !!globalState.getUserStatus()?.isPremium;
+        const hideSolved = settingUtils.shouldHideSolvedProblem();
+        if ([Category.Difficulty, Category.Tag, Category.Company].some((category) => category === scope.builtin)) {
+            const eligible = randomCandidates({ builtin: Category.All, label: "" }, [], problems, hideSolved, premium);
+            const nativeProblems: IProblem[] = [];
+            for (const item of eligible) if (item.kind === "leetcode") nativeProblems.push(item.problem);
+            const values = nativeScopeValues(scope.builtin!, nativeProblems);
+            if (!values.length) { vscode.window.showInformationMessage("所选分类暂无可选题目，请刷新题目列表后重试。"); return; }
+            const value = await vscode.window.showQuickPick(values, { placeHolder: `请选择${scope.label}中的抽题范围`, matchOnDescription: true });
+            if (!value) return;
+            scope.value = value.value;
+        }
+        const candidates = randomCandidates(scope, plans, problems, hideSolved, premium);
+        if (!candidates.length) { vscode.window.showInformationMessage("所选题单暂无可抽取的题目，请检查范围或刷新题目后重试。"); return; }
+        let language: string | undefined;
+        while (candidates.length) {
+            const candidate = candidates.splice(Math.floor(Math.random() * candidates.length), 1)[0];
+            if (candidate.kind === "markdown") {
+                const entry = candidate.entry;
+                if (!await fs.pathExists(entry.file!)) continue;
+                const javaFiles = await findLocalJavaFiles(entry.file!, entry.javaFiles);
+                const node = new StudyPlanNode({ ...entry, javaFiles });
+                if (javaFiles.length) await startLocalProblem(node);
+                else await previewLocalMarkdown(node);
+                return;
+            }
+            if (!language) language = await fetchProblemLanguage();
+            if (!language) return;
+            const problem = candidate.problem;
+            const supported = await leetCodeExecutor.getProblemLanguages(problem.id, settingUtils.shouldUseEndpointTranslation());
+            if (supported.indexOf(language) < 0) continue;
+            await showProblemInternal(problem, language, supported);
+            return;
+        }
+        vscode.window.showInformationMessage(language ? `所选范围没有找到支持 ${language} 的可用题目，可切换语言后重试。` : "所选范围内的本地题目文件已不存在，请刷新题单后重试。");
+    } catch (error) { await handleCommandError(error, "随机选题失败"); }
 }
 
 export async function showProblem(node?: LeetCodeNode): Promise<void> {
@@ -160,7 +220,7 @@ async function fetchProblemLanguage(): Promise<string | undefined> {
     return language;
 }
 
-async function showProblemInternal(node: IProblem): Promise<void> {
+async function showProblemInternal(node: IProblem, preferredLanguage?: string, knownLanguages?: readonly string[]): Promise<void> {
     try {
         const leetCodeConfig: vscode.WorkspaceConfiguration = vscode.workspace.getConfiguration("leetcode");
         const workspaceFolder: string = await selectWorkspaceFolder();
@@ -185,8 +245,20 @@ async function showProblemInternal(node: IProblem): Promise<void> {
             return;
         }
 
-        const language: string | undefined = await fetchProblemLanguage();
+        let language: string | undefined = preferredLanguage || await fetchProblemLanguage();
         if (!language) return;
+        const supported = knownLanguages || await leetCodeExecutor.getProblemLanguages(node.id, settingUtils.shouldUseEndpointTranslation());
+        if (supported.indexOf(language) < 0) {
+            const available = languages.filter((candidate) => supported.indexOf(candidate) >= 0);
+            if (!available.length) {
+                vscode.window.showInformationMessage(`题目 ${node.id} 不支持 ${language}，力扣提供的语言为：${supported.join("、")}。`);
+                return;
+            }
+            language = await vscode.window.showQuickPick(available, {
+                placeHolder: `题目 ${node.id} 不支持 ${language}，请选择该题可用的语言（本次选择不修改默认语言）`, ignoreFocusOut: true,
+            });
+            if (!language) return;
+        }
 
         const fileFolder: string = leetCodeConfig
             .get<string>(`filePath.${language}.folder`, leetCodeConfig.get<string>(`filePath.default.folder`, ""))

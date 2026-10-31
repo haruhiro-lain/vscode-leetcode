@@ -14,6 +14,7 @@ import * as wsl from "./utils/wslUtils";
 import { toWslPath, useWsl } from "./utils/wslUtils";
 import { ensureExerciseFile } from "./utils/exerciseFileUtils";
 import { isAuthenticationError } from "./utils/commandResultUtils";
+import { parseProblemLanguages } from "./utils/problemLanguages";
 
 class LeetCodeExecutor implements Disposable {
     private leetCodeRootPath: string;
@@ -136,6 +137,12 @@ class LeetCodeExecutor implements Disposable {
             cmd.push("-T");
         }
         return await this.executeCommandWithProgressEx("正在获取题目描述…", this.nodeExecutable, cmd);
+    }
+
+    public async getProblemLanguages(problemNodeId: string, needTranslation: boolean): Promise<string[]> {
+        const languages = parseProblemLanguages(await this.getDescription(problemNodeId, needTranslation));
+        if (!languages) throw new Error("无法识别该题支持的编程语言，请刷新题目后重试。");
+        return languages;
     }
 
     public async listSessions(): Promise<string> {

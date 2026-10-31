@@ -138,7 +138,7 @@ test('associated local Java and Markdown offer description previews without remo
         assert.equal(lenses[0].command.title, '题目描述');
         assert.equal(lenses[0].command.command, 'leetcode.previewLocalMarkdown');
         assert.deepEqual(lenses[0].command.arguments, [uri, true]);
-        assert.equal(lenses[0].range.start.line, 1);
+        assert.equal(lenses[0].range.start.line, 2);
         const noSolution = provider.provideCodeLenses({ ...localDocument, getText: () => 'class Main {}' });
         assert.equal(noSolution[0].range.start.line, 0);
         const markdown = provider.provideCodeLenses({ ...localDocument, languageId: 'markdown', getText: () => '# 本地题' });
@@ -161,7 +161,10 @@ test('OD Java without statement comments keeps the local description above Solut
         localProblems = [{ file: 'C:/practice/problems/P00513-计算数列位置N的值.md', name: '计算数列位置N的值' }];
         const lenses = provider.provideCodeLenses(odDocument);
         assert.equal(lenses.length, 1);
-        assert.equal(lenses[0].range.start.line, 4);
+        assert.equal(lenses[0].range.start.line, 5);
+        // CodeLens renders above its anchor, using the anchor line's indentation.
+        const anchor = code.split('\n')[lenses[0].range.start.line];
+        assert.match(anchor, /^ {4}class Solution\b/);
         assert.deepEqual(lenses[0].command, { title: '题目描述', command: 'leetcode.previewLocalMarkdown', arguments: [odUri, true] });
         assert.doesNotMatch(code, /@lc|题目描述|hydro\.ac/);
     } finally { localProblems = []; }

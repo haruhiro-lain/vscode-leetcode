@@ -32,7 +32,8 @@ export class CustomCodeLensProvider implements vscode.CodeLensProvider {
             if (shortcuts.indexOf("description") < 0 || !["java", "markdown"].includes(document.languageId) ||
                 !studyPlanManager.getLocalProblems(document.uri.fsPath).length) return undefined;
             const localSolutions = document.languageId === "java" ? findJavaSolutions(content) : [];
-            const line = localSolutions.length ? Math.max(0, document.positionAt(localSolutions[0].start).line - 1) : 0;
+            // VS Code renders CodeLens above its anchor and aligns it with that line's first non-whitespace character.
+            const line = localSolutions.length ? document.positionAt(localSolutions[0].start).line : 0;
             return [new vscode.CodeLens(new vscode.Range(line, 0, line, 0), {
                 title: "题目描述",
                 command: "leetcode.previewLocalMarkdown",
