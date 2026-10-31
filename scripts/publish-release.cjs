@@ -46,8 +46,13 @@ async function publishRelease({ github, context, core, root = path.resolve(__dir
         return { skipped: true, url: release.html_url };
     }
     // Existing tags must keep their original commit, including when retrying a draft.
-    const tagged = await findOrMissing(() => api.getCommit({ ...repo, ref: info.tag }));
-    if (tagged && tagged.sha !== context.sha) throw Error(`${info.tag} already points to another commit; increase the package version.`);
+    const tagRef = await findOrMissing(() => github.rest.git.getRef({ ...repo, ref: `tags/${info.tag}` }));
+    // getCommit reports an unknown tag as 422, while the dedicated ref endpoint returns 404.
+    // Resolve through getCommit only after finding the tag, so annotated tags work too.
+    if (tagRef) {
+        const tagged = (await api.getCommit({ ...repo, ref: info.tag })).data;
+        if (tagged.sha !== context.sha) throw Error(`${info.tag} already points to another commit; increase the package version.`);
+    }
     if (release && release.target_commitish !== context.sha) throw Error(`${info.tag} draft belongs to another commit; increase the package version.`);
     const data = fs.readFileSync(path.join(root, 'dist', info.filename));
     if (!data.length) throw Error('The VSIX installer is empty.');

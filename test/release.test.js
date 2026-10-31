@@ -25,13 +25,15 @@ function fixture(t) {
     const api = {
         getReleaseByTag: async () => state.release && !state.release.draft ? { data: state.release } : missing(),
         listReleases: async () => ({ data: state.release ? [state.release] : [] }),
-        getCommit: async () => state.tagged ? { data: { sha: state.tagged } } : missing(),
+        getCommit: async () => { if (state.tagged) return { data: { sha: state.tagged } }; throw Object.assign(Error('No commit found for SHA: v0.22.9'), { status: 422 }); },
         createRelease: async args => { calls.push(['create', args]); state.release = { id: 1, tag_name: args.tag_name, target_commitish: args.target_commitish, draft: true, assets: [], html_url: 'https://example.test/release' }; return { data: state.release }; },
         deleteReleaseAsset: async args => { calls.push(['delete', args]); },
         uploadReleaseAsset: async args => { calls.push(['upload', args]); if (state.failUpload) throw Error('Upload failed'); },
         updateRelease: async args => { calls.push(['publish', args]); return { data: { html_url: state.release.html_url } }; },
     };
-    const options = { root, github: { rest: { repos: api }, paginate: async (request, args) => (await request(args)).data }, context, core: { info: () => {} } };
+    const options = { root, github: { rest: { repos: api, git: {
+        getRef: async args => { assert.equal(args.ref, 'tags/v0.22.9'); return state.tagged ? { data: { object: { sha: state.tagged } } } : missing(); },
+    } }, paginate: async (request, args) => (await request(args)).data }, context, core: { info: () => {} } };
     return { root, manifest, lock, save, filename, data, calls, state, api, options };
 }
 
@@ -95,6 +97,12 @@ test('a failed upload remains a draft and a retry can replace only its own incom
 test('an existing tag on another commit cannot be moved or released', async t => {
     const f = fixture(t); f.state.tagged = 'b'.repeat(40);
     await assert.rejects(publishRelease(f.options), /another commit/); assert.equal(f.calls.length, 0);
+});
+
+test('a new version with no tag is published without treating the commit endpoint 422 as a failure', async t => {
+    const f = fixture(t);
+    f.api.getCommit = async () => { assert.fail('Unknown tags must not be sent to the commit endpoint.'); };
+    assert.equal((await publishRelease(f.options)).skipped, false);
 });
 
 test('a draft from another commit cannot be replaced even before its tag exists', async t => {
