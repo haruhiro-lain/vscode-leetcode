@@ -1,6 +1,6 @@
 # LeetCode-CN：安装与共享工作区设置
 
-当前版本 **0.22.9**，独立扩展标识为 **`haruhiro-lain.leetcode-cn`**，插件源码分支为 `feat/personalization`。VSIX 文件名为 `LeetCode-CN-0.22.9.vsix`。
+当前版本 **0.22.10**，独立扩展标识为 **`haruhiro-lain.leetcode-cn`**，插件源码分支为 `feat/personalization`。VSIX 文件名为 `LeetCode-CN-0.22.10.vsix`。
 
 侧边栏视图标题统一为 LeetCode-CN。顶部按钮从左到右为：搜索题目、随机一题、刷新题目、自定义题单、全部折叠。“切换站点”位于“视图和更多操作（…）”菜单；登录、退出及题目排序也在该菜单中，登录/退出入口继续随账号状态切换。随机一题使用音乐播放器常见的交叉箭头随机播放图标，适配浅色与深色主题；自定义题单使用带加号的文件图标。全部折叠沿用 VS Code 原生按钮。
 
@@ -9,7 +9,7 @@
 打开 [GitHub Releases](https://github.com/haruhiro-lain/vscode-leetcode/releases/latest)，在 Assets 中下载 `LeetCode-CN-版本号.vsix`。在 VS Code 扩展页面右上角“…”中选择“从 VSIX 安装…”，或执行：
 
 ```powershell
-code --install-extension LeetCode-CN-0.22.9.vsix --force
+code --install-extension LeetCode-CN-0.22.10.vsix --force
 ```
 
 安装后执行“开发人员: 重新加载窗口”。每台电脑仍需安装 Node.js 22.13 或以上，但无需克隆插件仓库、安装 npm 依赖或自行打包。后续升级重新下载最新版安装包即可，账号和工作区配置继续使用本机现有数据。第一次从原版切换请参照下节，移除旧标识，避免重复入口。
@@ -233,3 +233,27 @@ npm exec --yes --package=@vscode/vsce@4.0.0 -- vsce package --out LeetCode-CN-0.
 ```
 
 本地 OD 的 Java 文件可以只保留 package、外层类、main 和 Solution 等练习代码，无需嵌入题面注释或 `@lc` 标记。插件根据题单索引中同一行的 Markdown 与 Java 链接关联题目；点击代码中的“题目描述”后，在右侧查看对应 Markdown，代码编辑器保留焦点。
+
+## 本地文件测试
+
+点击 Java 解法上方的“运行测试”，选择“从文件读取…”。插件直接读取该 Java 文件同目录、同主名的 `.txt`，不弹出文件选择框；缺失时提示完整路径。输入和期望输出保存在同一个文件内，使用 UTF-8 JSON 格式，例如 `283.移动零.txt`：
+
+```json
+{
+  "method": "moveZeroes",
+  "cases": [
+    { "input": [[0, 1, 0, 3, 12]], "expected": [1, 3, 12, 0, 0] },
+    { "input": [[0]], "expected": [0] }
+  ]
+}
+```
+
+- `input` 是参数数组，顺序与 Java 方法签名一致；例如两数之和用 `[[2,7,11,15],9]`。
+- `expected` 是期望返回值；`void` 方法默认比较修改后的第一个参数，可用用例字段 `outputArg` 指定其他参数的下标（从 0 开始）。
+- 默认严格比较顺序；结果外层无序时设置 `comparison:"unordered"`，内外两层均无序时用 `comparison:"unorderedNested"`。重复项仍参与比较。
+- 每例独立运行，在 VS Code 终端显示输入、期望、实际结果、PASS/FAIL、耗时及汇总。结束后保留终端输出；关闭终端或按 Ctrl+C 可停止运行。默认每例超时 10 秒，顶层 `timeoutMs` 支持 100～300000 毫秒。
+- 本机 JDK 编译执行，无需登录或上传到力扣。支持基本类型、字符串、数组和 List/Set；自定义节点参数、设计题操作序列暂不支持。
+- OD 可以测试 `Solution.solve(String input)`，每例写 `"input":["完整标准输入"]` 和 `"expected":"返回字符串"`。同一文件可保存多组独立用例。
+- 测试完整 `main` 时设置顶层 `"mode":"stdin"`，每例的 `input`、`expected` 均为完整标准输入/输出字符串；仅规范化换行并忽略一个结尾换行。
+- 本地 JDK 使用工作区的 Java 配置、`JAVA_HOME` 或 `PATH`。另一台电脑安装相同版本 VSIX 后，也需配置该机器的 JDK 路径，并同步题解及测试文件。
+- “默认测试用例”和“输入测试用例…”仍使用力扣在线判题。

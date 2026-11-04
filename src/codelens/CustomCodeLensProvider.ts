@@ -29,16 +29,26 @@ export class CustomCodeLensProvider implements vscode.CodeLensProvider {
         const content: string = document.getText();
         const matchResult: RegExpMatchArray | null = content.match(/@lc app=.* id=(.*) lang=.*/);
         if (!matchResult) {
-            if (shortcuts.indexOf("description") < 0 || !["java", "markdown"].includes(document.languageId) ||
+            if (!["java", "markdown"].includes(document.languageId) ||
                 !studyPlanManager.getLocalProblems(document.uri.fsPath).length) return undefined;
             const localSolutions = document.languageId === "java" ? findJavaSolutions(content) : [];
-            // VS Code renders CodeLens above its anchor and aligns it with that line's first non-whitespace character.
             const line = localSolutions.length ? document.positionAt(localSolutions[0].start).line : 0;
-            return [new vscode.CodeLens(new vscode.Range(line, 0, line, 0), {
-                title: "题目描述",
-                command: "leetcode.previewLocalMarkdown",
-                arguments: [document.uri, true],
-            })];
+            const lenses: vscode.CodeLens[] = [];
+            if (shortcuts.includes("description")) lenses.push(new vscode.CodeLens(new vscode.Range(line, 0, line, 0), {
+                title: "题目描述", command: "leetcode.previewLocalMarkdown", arguments: [document.uri, true],
+            }));
+            if (document.languageId === "java" && shortcuts.includes("test")) {
+                for (const solution of localSolutions) {
+                    const position = document.positionAt(solution.start);
+                    lenses.push(new vscode.CodeLens(new vscode.Range(position.line, 0, position.line, 0), {
+                        title: "运行测试", command: "leetcode.testSolution", arguments: [document.uri, solution],
+                    }));
+                }
+                if (!localSolutions.length) lenses.push(new vscode.CodeLens(new vscode.Range(line, 0, line, 0), {
+                    title: "运行测试", command: "leetcode.testSolution", arguments: [document.uri],
+                }));
+            }
+            return lenses.length ? lenses : undefined;
         }
         const nodeId: string | undefined = matchResult[1];
         let node: LeetCodeNode | undefined;

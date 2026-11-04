@@ -134,7 +134,8 @@ test('associated local Java and Markdown offer description previews without remo
     try {
         localProblems = [{ file: 'C:/practice/problems/local.md', name: '本地题' }];
         const lenses = provider.provideCodeLenses(localDocument);
-        assert.equal(lenses.length, 1);
+        assert.equal(lenses.length, 3);
+        assert.equal(lenses.filter(l => l.command.command === "leetcode.testSolution").length, 2);
         assert.equal(lenses[0].command.title, '题目描述');
         assert.equal(lenses[0].command.command, 'leetcode.previewLocalMarkdown');
         assert.deepEqual(lenses[0].command.arguments, [uri, true]);
@@ -146,7 +147,7 @@ test('associated local Java and Markdown offer description previews without remo
         // Genuine LeetCode metadata keeps its online description and submit/test commands.
         assert.equal(provider.provideCodeLenses(document)[0].command.command, 'leetcode.previewProblem');
         shortcuts = ['submit', 'test'];
-        assert.equal(provider.provideCodeLenses(localDocument), undefined);
+        assert.equal(provider.provideCodeLenses(localDocument).length, 2);
         shortcuts = ['description']; localProblems = [];
         assert.equal(provider.provideCodeLenses(localDocument), undefined);
     } finally { localProblems = []; shortcuts = ['submit', 'test', 'description']; }
@@ -160,7 +161,7 @@ test('OD Java without statement comments keeps the local description above Solut
     try {
         localProblems = [{ file: 'C:/practice/problems/P00513-计算数列位置N的值.md', name: '计算数列位置N的值' }];
         const lenses = provider.provideCodeLenses(odDocument);
-        assert.equal(lenses.length, 1);
+        assert.equal(lenses.length, 2);
         assert.equal(lenses[0].range.start.line, 5);
         // CodeLens renders above its anchor, using the anchor line's indentation.
         const anchor = code.split('\n')[lenses[0].range.start.line];
@@ -197,8 +198,8 @@ test('file commands offer an implementation picker, cancel cleanly, and custom t
     picks = [];
     await submitSolution(uri);
     assert.equal(calls.length, 0);
-    picks = [items => items.find(i => i.solution.name === 'Solution2'),
-        items => items.find(i => i.value === ':direct')];
+    picks = [items => items.find(i => i.value === ':direct'),
+        items => items.find(i => i.solution.name === 'Solution2')];
     vscode.window.showInputBox = async () => '[1,2,3]\\n4';
     await testSolution(uri);
     assert.equal(calls.length, 1);
@@ -245,6 +246,7 @@ test('expired sessions prompt re-login, do not show judge results, and still cle
     assert.equal(userStatus, 2);
     assert.equal(results.length, before);
     await assert.rejects(fs.stat(calls[calls.length - 1].file), { code: 'ENOENT' });
+    picks = [items => items.find(i => i.value === ':default')];
     await testSolution(uri, target);
     assert.ok(commands.includes('promptSignIn'));
     userStatus = 1;

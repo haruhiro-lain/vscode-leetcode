@@ -1,6 +1,8 @@
 // Copyright (c) jdneo. All rights reserved.
 // Licensed under the MIT license.
 
+import * as fse from "fs-extra";
+import * as path from "path";
 import * as vscode from "vscode";
 import { getLeetCodeEndpoint } from "../commands/plugin";
 import { leetCodeChannel } from "../leetCodeChannel";
@@ -81,7 +83,11 @@ export async function openKeybindingsEditor(query?: string): Promise<void> {
 }
 
 export async function showFileSelectDialog(fsPath?: string): Promise<vscode.Uri[] | undefined> {
-    const defaultUri: vscode.Uri | undefined = getBelongingWorkspaceFolderUri(fsPath);
+    let defaultUri: vscode.Uri | undefined;
+    if (fsPath) {
+        const testPath: string = path.join(path.dirname(fsPath), path.basename(fsPath, path.extname(fsPath)) + ".txt");
+        defaultUri = vscode.Uri.file(await fse.pathExists(testPath) ? testPath : path.dirname(fsPath));
+    }
     const options: vscode.OpenDialogOptions = {
         defaultUri,
         canSelectFiles: true,

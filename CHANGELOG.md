@@ -3,6 +3,16 @@ All notable changes to the "leetcode" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.22.10] 本地文件测试
+### Added
+- 从 Java 同目录、同主名的 txt JSON 文件直接读取输入和期望输出，无需手动选择文件。
+- 使用本机 JDK 编译运行所选 Solution，在终端逐例输出输入、期望、实际结果、PASS/FAIL 和汇总，无需登录力扣。
+- 支持原地修改参数、无序结果比较、完整 main 的标准输入输出、独立用例超时和取消运行；本地 OD 题解增加运行测试入口。
+- 补充测试文件格式、本机 JDK 配置和跨电脑安装说明。
+### Fixed
+- 修复编辑器 LF 与磁盘 CRLF 换行不同导致的解法定位失败，避免误选其他 Solution。
+- 文件缺失、编译失败、题解异常和超时会明确报告，不将未实现题解误判为通过。
+
 ## [0.22.9] 自动发布安装包
 ### Added
 - 定制分支推送新版本后，Windows 与 Linux 校验通过即自动发布 GitHub Release，提供 VSIX 安装包、SHA256 校验文件与安装说明。
