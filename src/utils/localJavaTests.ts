@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as vscode from "vscode";
 import * as fse from "fs-extra";
+import { resolveLocalTestPath } from "./localTestPathUtils";
 import { findJavaSolutions, IJavaSolutionTarget } from "./javaSolutionUtils";
 import { executeLocalJavaTests, ILocalTestOptions, parseLocalTestFile } from "./localJavaTestCore";
 
@@ -9,8 +10,10 @@ export async function runLocalJavaTests(uri?: vscode.Uri, target?: IJavaSolution
     if (!sourceUri || path.extname(sourceUri.fsPath).toLowerCase() !== ".java") throw new Error("本地文件测试目前支持 Java 题解。");
     const document: vscode.TextDocument = await vscode.workspace.openTextDocument(sourceUri);
     if (document.isDirty && !await document.save()) throw new Error("请先保存 Java 题解。");
-    const testPath: string = path.join(path.dirname(sourceUri.fsPath), path.basename(sourceUri.fsPath, path.extname(sourceUri.fsPath)) + ".txt");
-    if (!await fse.pathExists(testPath)) throw new Error(`未找到测试文件：${testPath}。请在 Java 文件同目录创建同名 .txt 文件。`);
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(sourceUri);
+    if (!workspaceFolder) throw new Error("请先打开包含该 Java 文件的工作区文件夹。");
+    const testPath: string = resolveLocalTestPath(workspaceFolder.uri.fsPath, sourceUri.fsPath);
+    if (!await fse.pathExists(testPath)) throw new Error(`未找到测试文件：${testPath}。请在 .vscode/LeetCode-CN 下按 Java 相对工作区的路径创建同名 .txt 文件。`);
     const testDocument = await vscode.workspace.openTextDocument(vscode.Uri.file(testPath));
     if (testDocument.isDirty && !await testDocument.save()) throw new Error("请先保存测试文件。");
     const data = parseLocalTestFile(await fse.readFile(testPath, "utf8"));

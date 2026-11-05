@@ -5,6 +5,7 @@ const path = require('node:path');
 const os = require('node:os');
 const { parseLocalTestFile, executeLocalJavaTests, resolveLocalJavaTarget } = require('../out/src/utils/localJavaTestCore');
 const { findJavaSolutions } = require('../out/src/utils/javaSolutionUtils');
+const { resolveLocalTestPath } = require('../out/src/utils/localTestPathUtils');
 
 function javaOptions(write = () => {}) {
     const homes = [process.env.JAVA_HOME, 'D:/Environment/java/java17', path.join(os.homedir(), '.jdks/openjdk-17.0.1')].filter(Boolean);
@@ -131,7 +132,7 @@ test('file command delegates locally without login, online executor or submissio
 
 test('local terminal uses original paths and configured JDK and keeps completed output visible', async () => {
     const calls = [], writes = [];
-    const uri = { fsPath: 'D:/题目/283.移动零.java' }, file = { fsPath: path.join('D:/题目', '283.移动零.txt') };
+    const uri = { fsPath: 'D:/题目/283.移动零.java' }, file = { fsPath: path.join('D:/题目', '.vscode', 'LeetCode-CN', '283.移动零.txt') };
     const target = { name: 'Solution2', start: 22 };
     let terminalOptions;
     const mocks = {
@@ -139,6 +140,7 @@ test('local terminal uses original paths and configured JDK and keeps completed 
             pathExists: async testPath => { assert.equal(testPath, file.fsPath); return true; },
             readFile: async () => '{"cases":[{"input":[[0,1]],"expected":[1,0]}]}' },
         './javaSolutionUtils': { findJavaSolutions },
+        './localTestPathUtils': { resolveLocalTestPath },
         './uiUtils': { showFileSelectDialog: () => { throw Error('Must not open a file picker'); } },
         './localJavaTestCore': {
             parseLocalTestFile,
@@ -148,6 +150,7 @@ test('local terminal uses original paths and configured JDK and keeps completed 
             Uri: { file: fsPath => ({ fsPath }) },
             EventEmitter: class { constructor() { this.event = () => {}; } fire(text) { writes.push(text); } dispose() {} },
             workspace: {
+                getWorkspaceFolder: () => ({ uri: { fsPath: 'D:/题目' } }),
                 openTextDocument: async () => ({ isDirty: false, getText: () => '' }),
                 getConfiguration: () => ({ get: key => key === 'configuration.runtimes' ? [{ path: 'D:/JDK', default: true }] : undefined }),
             },
@@ -168,14 +171,14 @@ test('local terminal uses original paths and configured JDK and keeps completed 
     assert.equal(calls[0][3].cancelled, true);
 });
 
-test('missing sibling txt reports the full path without opening a file picker or terminal', async () => {
+test('missing mirrored txt reports the full path without opening a file picker or terminal', async () => {
     const sourceUri = { fsPath: path.join('D:/题目', '283.移动零.java') };
-    const expectedPath = path.join('D:/题目', '283.移动零.txt');
+    const expectedPath = path.join('D:/题目', '.vscode', 'LeetCode-CN', '283.移动零.txt');
     const mocks = {
         path, 'fs-extra': { pathExists: async value => { assert.equal(value, expectedPath); return false; } },
-        './javaSolutionUtils': {}, './localJavaTestCore': {},
+        './javaSolutionUtils': {}, './localJavaTestCore': {}, './localTestPathUtils': { resolveLocalTestPath },
         vscode: {
-            workspace: { openTextDocument: async () => ({ isDirty: false }) },
+            workspace: { getWorkspaceFolder: () => ({ uri: { fsPath: 'D:/题目' } }), openTextDocument: async () => ({ isDirty: false }) },
             window: { showOpenDialog: () => { throw Error('Unexpected file picker'); }, createTerminal: () => { throw Error('Unexpected terminal'); } },
         },
     };

@@ -19,7 +19,7 @@ export async function testSolution(uri?: vscode.Uri, target?: IJavaSolutionTarge
     let local: boolean = false;
     try {
         const picks: Array<IQuickItemEx<string>> = [
-            { label: "$(file-text) 从文件读取…", description: "本地运行", detail: "读取同名 txt 中的输入和期望输出，本地编译并在终端显示结果", value: ":file" },
+            { label: "$(file-text) 从文件读取…", description: "本地运行", detail: "读取 .vscode/LeetCode-CN 中对应路径的 txt 输入和期望输出，本地编译并在终端显示结果", value: ":file" },
             { label: "$(three-bars) 默认测试用例", description: "力扣在线", detail: "使用题目自带的测试用例", value: ":default" },
             { label: "$(pencil) 输入测试用例…", description: "力扣在线", detail: "在输入框中填写自定义测试用例", value: ":direct" },
         ];

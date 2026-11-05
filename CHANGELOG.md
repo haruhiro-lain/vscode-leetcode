@@ -3,6 +3,12 @@ All notable changes to the "leetcode" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.22.13] 集中管理本地测试用例
+### Changed
+- 从工作区根目录 .vscode/LeetCode-CN 下读取测试文件，完整保留 Java 相对路径并将扩展名改为 txt。
+- 多工作区分别使用题解所属文件夹的测试目录，同名 Java 文件按目录隔离；文件缺失时提示新的完整路径。
+- 保持每题一个 JSON 测试文件，统一保存输入和期望输出，直接本地运行并显示终端结果。
+
 ## [0.22.12] 精简题单右键菜单
 ### Changed
 - 移除自定义题单右键菜单中的“打开题目源文件”，仅保留“预览题目”和“开始做题”两项题目操作。
