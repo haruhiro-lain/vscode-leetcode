@@ -1,3 +1,4 @@
+import { formatLocalProblemLabel } from "./localProblemId";
 import * as path from "path";
 import * as fs from "fs-extra";
 import * as vscode from "vscode";
@@ -110,7 +111,7 @@ export class StudyPlanManager implements vscode.Disposable {
     }
 
     public getLabel(node: StudyPlanNode): string {
-        if (node.entry.kind === "markdown") return node.name;
+        if (node.entry.kind === "markdown") return formatLocalProblemLabel(node.name, node.entry.localProblemId);
         const { accepted, total } = this.getProgress(node);
         return `${arabicModuleName(node.name)} (${accepted}/${total})`;
     }

@@ -1,3 +1,4 @@
+import { findLocalProblemId } from "./localProblemId";
 import * as fs from "fs-extra";
 import * as path from "path";
 import * as crypto from "crypto";
@@ -12,6 +13,7 @@ export interface IStudyPlanEntry {
     kind: "group" | "leetcode" | "markdown" | "builtin";
     children: IStudyPlanEntry[];
     problemId?: string;
+    localProblemId?: string;
     file?: string;
     completed?: boolean;
     builtin?: string;
@@ -124,7 +126,8 @@ async function readLocalProblem(file: string, key: string, result: IStudyPlanRes
     } catch (error) { if (error.code !== "ENOENT") throw error; }
     for (const candidate of localJavaCandidates(file, candidates, content)) result.dependencies.add(candidate);
     const javaFiles = await findLocalJavaFiles(file, candidates, content);
-    return Object.assign(makeEntry(key, name || title, "markdown"), { file, completed, javaFiles });
+    const localProblemId = findLocalProblemId(content, file);
+    return Object.assign(makeEntry(key, name || title, "markdown"), { file, completed, javaFiles }, localProblemId ? { localProblemId } : {});
 }
 
 async function readFolder(folder: string, key: string, result: IStudyPlanResult, depth: number): Promise<IStudyPlanEntry[]> {

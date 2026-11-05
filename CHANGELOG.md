@@ -3,6 +3,12 @@ All notable changes to the "leetcode" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.22.14] 显示自定义题单题目编号
+### Added
+- 自定义题单中的本地题目前显示题目自身编号，例如 [P00513] 计算数列位置N的值。
+- 支持从题面标题、题目编号字段或文件名识别编号；保留前导零，避免重复前缀，不将 CSDN 原序号或文章 ID 当作题号。
+- 兼容索引导入、目录扫描和手动配置，自定义名称、原排序与题面和代码关联保持一致。
+
 ## [0.22.13] 集中管理本地测试用例
 ### Changed
 - 从工作区根目录 .vscode/LeetCode-CN 下读取测试文件，完整保留 Java 相对路径并将扩展名改为 txt。

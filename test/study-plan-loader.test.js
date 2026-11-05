@@ -138,3 +138,21 @@ test('local Java bindings use JSON-relative paths and remain associated with the
     const invalid = await load([{ id: 'bad', name: '错误', items: [{ file: '../docs/shared.md', java: 123 }] }]);
     assert.equal(invalid.errors.length, 1);
 });
+
+test('local IDs survive custom names and every local import mode', async () => {
+    await write('docs/P00513-数列.md', '# [P00513] 计算数列位置N的值');
+    await write('docs/P00511-空间.md', '# 空间占用计算');
+    await write('docs/index.md', '# 索引\n## 新系统\n| CSDN 原序号 | 题目 |\n|---|---|\n| [1](https://renjie.blog.csdn.net/article/details/123456789) | [计算数列位置N的值](P00513-数列.md) |\n');
+    const result = await load([
+        { id: 'source', name: '索引', source: '../docs/index.md' },
+        { id: 'manual', name: '手动', items: [{ name: '我的练习', file: '../docs/P00513-数列.md' }] },
+        { id: 'folder', name: '扫描', folder: '../docs' },
+    ]);
+    assert.deepEqual(result.errors, []);
+    const source = flatten(result.roots[0].children)[0];
+    assert.equal(source.name, '计算数列位置N的值');
+    assert.equal(source.localProblemId, 'P00513');
+    assert.equal(flatten(result.roots[1].children)[0].name, '我的练习');
+    assert.equal(flatten(result.roots[1].children)[0].localProblemId, 'P00513');
+    assert.equal(flatten(result.roots[2].children).find(entry => entry.file.endsWith('P00511-空间.md')).localProblemId, 'P00511');
+});

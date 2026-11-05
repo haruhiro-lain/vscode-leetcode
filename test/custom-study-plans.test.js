@@ -231,3 +231,20 @@ test('local rows with existing Java files expose Start Coding and shared stateme
     await fs.unlink(first); await studyPlans.refresh();
     assert.equal(view.getTreeItem(view.getChildren(studyPlans.getRoots()[0])[0]).contextValue, 'local-markdown');
 });
+
+test('custom tree labels show local problem IDs without changing names, order or actions', async () => {
+    const first = path.join(root, 'P00513.md'), second = path.join(root, 'P00511.md');
+    await fs.writeFile(first, '# [P00513] 计算数列位置N的值');
+    await fs.writeFile(second, '# [P00511] 空间占用计算');
+    await configure([{ id: 'od', name: 'OD', items: [
+        { name: '计算数列位置N的值', file: first }, { name: '[P00511] 空间占用计算', file: second },
+    ] }]);
+    await studyPlans.refresh();
+    const view = provider(), parent = studyPlans.getRoots()[0];
+    const children = view.getChildren(parent);
+    assert.deepEqual(children.map(child => view.getTreeItem(child).label), ['[P00513] 计算数列位置N的值', '[P00511] 空间占用计算']);
+    assert.equal(children[0].name, '计算数列位置N的值');
+    assert.equal(view.getTreeItem(children[0]).command.command, 'leetcode.previewLocalMarkdown');
+    assert.equal(view.getTreeItem(children[0]).resourceUri.fsPath, first);
+    assert.equal(view.getTreeItem(parent).label, 'OD (0/2)');
+});
