@@ -3,6 +3,10 @@ All notable changes to the "leetcode" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.22.12] 精简题单右键菜单
+### Changed
+- 移除自定义题单右键菜单中的“打开题目源文件”，仅保留“预览题目”和“开始做题”两项题目操作。
+
 ## [0.22.11] 自定义题单右键操作
 ### Fixed
 - 自定义题单中的本地题目右键显示“预览题目”和“开始做题”，保留行内快捷图标。
