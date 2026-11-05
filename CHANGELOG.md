@@ -3,6 +3,11 @@ All notable changes to the "leetcode" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.22.11] 自定义题单右键操作
+### Fixed
+- 自定义题单中的本地题目右键显示“预览题目”和“开始做题”，保留行内快捷图标。
+- “预览题目”打开本地题面，“开始做题”打开关联 Java 文件；未关联代码时提示检查路径，题单和分组节点不显示题目操作。
+
 ## [0.22.10] 本地文件测试
 ### Added
 - 从 Java 同目录、同主名的 txt JSON 文件直接读取输入和期望输出，无需手动选择文件。

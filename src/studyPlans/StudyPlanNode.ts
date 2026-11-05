@@ -9,7 +9,7 @@ export class StudyPlanNode extends LeetCodeNode {
     }
 
     public get previewCommand(): Command {
-        return { title: "预览本地题目", command: "leetcode.previewLocalMarkdown", arguments: [this] };
+        return { title: "预览题目", command: "leetcode.previewLocalMarkdown", arguments: [this] };
     }
 
     public get state(): ProblemState {

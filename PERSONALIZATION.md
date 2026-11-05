@@ -1,6 +1,6 @@
 # LeetCode-CN：安装与共享工作区设置
 
-当前版本 **0.22.10**，独立扩展标识为 **`haruhiro-lain.leetcode-cn`**，插件源码分支为 `feat/personalization`。VSIX 文件名为 `LeetCode-CN-0.22.10.vsix`。
+当前版本 **0.22.11**，独立扩展标识为 **`haruhiro-lain.leetcode-cn`**，插件源码分支为 `feat/personalization`。VSIX 文件名为 `LeetCode-CN-0.22.11.vsix`。
 
 侧边栏视图标题统一为 LeetCode-CN。顶部按钮从左到右为：搜索题目、随机一题、刷新题目、自定义题单、全部折叠。“切换站点”位于“视图和更多操作（…）”菜单；登录、退出及题目排序也在该菜单中，登录/退出入口继续随账号状态切换。随机一题使用音乐播放器常见的交叉箭头随机播放图标，适配浅色与深色主题；自定义题单使用带加号的文件图标。全部折叠沿用 VS Code 原生按钮。
 
@@ -9,7 +9,7 @@
 打开 [GitHub Releases](https://github.com/haruhiro-lain/vscode-leetcode/releases/latest)，在 Assets 中下载 `LeetCode-CN-版本号.vsix`。在 VS Code 扩展页面右上角“…”中选择“从 VSIX 安装…”，或执行：
 
 ```powershell
-code --install-extension LeetCode-CN-0.22.10.vsix --force
+code --install-extension LeetCode-CN-0.22.11.vsix --force
 ```
 
 安装后执行“开发人员: 重新加载窗口”。每台电脑仍需安装 Node.js 22.13 或以上，但无需克隆插件仓库、安装 npm 依赖或自行打包。后续升级重新下载最新版安装包即可，账号和工作区配置继续使用本机现有数据。第一次从原版切换请参照下节，移除旧标识，避免重复入口。
@@ -257,3 +257,7 @@ npm exec --yes --package=@vscode/vsce@4.0.0 -- vsce package --out LeetCode-CN-0.
 - 测试完整 `main` 时设置顶层 `"mode":"stdin"`，每例的 `input`、`expected` 均为完整标准输入/输出字符串；仅规范化换行并忽略一个结尾换行。
 - 本地 JDK 使用工作区的 Java 配置、`JAVA_HOME` 或 `PATH`。另一台电脑安装相同版本 VSIX 后，也需配置该机器的 JDK 路径，并同步题解及测试文件。
 - “默认测试用例”和“输入测试用例…”仍使用力扣在线判题。
+
+## 自定义题单右键操作
+
+右键自定义题单中的本地题目，可选择“预览题目”查看题面，或“开始做题”打开关联的 Java 代码。行内图标继续保留；没有关联代码时，“开始做题”会提示检查路径。题单和分组节点不显示这两项。

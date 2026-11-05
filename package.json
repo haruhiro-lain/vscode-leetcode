@@ -2,7 +2,7 @@
     "name": "leetcode-cn",
     "displayName": "LeetCode-CN",
     "description": "在 VS Code 中浏览力扣题目、编写题解、运行测试、提交代码并查看中文判题结果。",
-    "version": "0.22.10",
+    "version": "0.22.11",
     "author": "haruhiro-lain",
     "publisher": "haruhiro-lain",
     "license": "MIT",
@@ -160,7 +160,7 @@
             },
             {
                 "command": "leetcode.previewLocalMarkdown",
-                "title": "预览本地题目",
+                "title": "预览题目",
                 "category": "LeetCode-CN",
                 "icon": "$(preview)"
             },
@@ -270,12 +270,22 @@
                 {
                     "command": "leetcode.openLocalMarkdown",
                     "when": "view == leetCodeExplorer && viewItem =~ /^local-markdown/",
-                    "group": "leetcode@1"
+                    "group": "leetcode@3"
                 },
                 {
                     "command": "leetcode.startLocalProblem",
                     "when": "view == leetCodeExplorer && viewItem == local-markdown-java",
                     "group": "inline@2"
+                },
+                {
+                    "command": "leetcode.previewLocalMarkdown",
+                    "when": "view == leetCodeExplorer && viewItem =~ /^local-markdown/",
+                    "group": "leetcode@1"
+                },
+                {
+                    "command": "leetcode.startLocalProblem",
+                    "when": "view == leetCodeExplorer && viewItem =~ /^local-markdown/",
+                    "group": "leetcode@2"
                 }
             ],
             "commandPalette": [
